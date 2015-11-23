@@ -12,14 +12,20 @@ void run_tests(){
     cout << "Testing gf::_inner::cl_div(): \t" << ((gf::test::_inner::cl_div_test()) ? "SUCCESS" : "FAILURE") << endl;
     cout << "Testing gf::mult_noLUT(): \t" << ((gf::test::mult_noLUT_test()) ? "SUCCESS" : "FAILURE") << endl;
     cout << "Testing gf::mult_noLUT_RPM(): \t" << ((gf::test::mult_noLUT_RPM_test()) ? "SUCCESS" : "FAILURE") << endl;
+    cout << "Testing gf::init_tables(): \t" << ((gf::test::init_tables_test()) ? "SUCCESS" : "FAILURE") << endl;
 
     cout << "\n";
     cout << "Testing gf::mul(): \t" << ((gf::test::mul_test()) ? "SUCCESS" : "FAILURE") << endl;
+    cout << "Testing gf::div(): \t" << ((gf::test::div_test()) ? "SUCCESS" : "FAILURE") << endl;
+    cout << "Testing gf::pow(): \t" << ((gf::test::pow_test()) ? "SUCCESS" : "FAILURE") << endl;
+    cout << "Testing gf::inverse(): \t" << ((gf::test::inverse_test()) ? "SUCCESS" : "FAILURE") << endl;
 
     cout << "\n";
+    cout << "Testing gf::poly_scale(): \t" << ((gf::test::poly_scale_test()) ? "SUCCESS" : "FAILURE") << endl;
     cout << "Testing gf::poly_add(): \t" << ((gf::test::poly_add_test()) ? "SUCCESS" : "FAILURE") << endl;
     cout << "Testing gf::poly_mul(): \t" << ((gf::test::poly_mul_test()) ? "SUCCESS" : "FAILURE") << endl;
     cout << "Testing gf::poly_div(): \t" << ((gf::test::poly_div_test()) ? "SUCCESS" : "FAILURE") << endl;
+    cout << "Testing gf::poly_eval(): \t" << ((gf::test::poly_eval_test()) ? "SUCCESS" : "FAILURE") << endl;
 }
 
 bool mult_noLUT_test(){
@@ -47,30 +53,64 @@ bool mult_noLUT_RPM_test(){
 }
 
 bool mul_test(){
+    int a[10] = { 11, 81, 54, 239, 173, 200, 24, 255, 11, 81 };
+    int b[10] = { 12, 55, 21, 44, 33, 12, 66, 99, 227, 33 };
+    int r_ans[10] = {116, 33, 169, 28, 169, 9, 126, 187, 115, 163};
+    int ans[10];
+
+    for(int i = 0; i < 10; i++){
+        ans[i] = mul(a[i], b[i]);
+    }
+
+    if(memcmp(r_ans, ans, 10 * sizeof(uint8)) != 0) return false;
+    return true;
+}
+
+bool div_test(){
     int a = 0b10001001;
     int b = 0b00101010;
 
-    int right_ans = 0b11000011;
-    int ans = gf::mul(a, b);
+    int right_ans = 0b11011100; // 220d
+    int ans = gf::div(a, b);
 
     if(right_ans == ans) return true;
     return false;
 }
 
-bool div_test(){
-
-}
-
 bool pow_test(){
+    int x = 0b10001001;
+    int p = 8;
 
+    int right_ans = 0b11010011; // 211d
+    int ans = gf::pow(x, p);
+
+    if(right_ans == ans) return true;
+    return false;
 }
 
 bool inverse_test(){
+    int x = 0b10001001;
 
+    int right_ans = 0b110001; // 49d
+    int ans = gf::inverse(x);
+
+    if(right_ans == ans) return true;
+    return false;
 }
 
 bool poly_scale_test(){
+    size_t as = 5;
+    uint8 pa[as] = {1, 0, 7, 6, 4};
+    uint8 scalar = 8;
 
+    uint8 right_ans[5] = {8, 0, 56, 48, 32};
+
+    size_t ans_size;
+    uint8  *ans = poly_scale(pa, as, scalar, &ans_size);
+
+    if(ans_size != 5) return false;
+    if(memcmp(right_ans, ans, 5 * sizeof(uint8)) != 0) return false;
+    return true;
 }
 
 bool poly_add_test(){
@@ -85,7 +125,7 @@ bool poly_add_test(){
     uint8  *ans = poly_add(pa, as, pb, bs, &ans_size);
 
     if(ans_size != 5) return false;
-    if(memcmp(right_ans, ans, 5) == 0) return true;
+    if(memcmp(right_ans, ans, 5 * sizeof(uint8)) == 0) return true;
     return false;
 }
 
@@ -101,7 +141,7 @@ bool poly_mul_test(){
     uint8  *ans = poly_mul(pa, as, pb, bs, &ans_size);
 
     if(ans_size != 7) goto fail;
-    if(memcmp(right_ans, ans, 7) == 0) return true;
+    if(memcmp(right_ans, ans, 7 * sizeof(uint8)) == 0) return true;
 
 fail:
     cout << "poly_mul: \nexpected\t";
@@ -126,9 +166,9 @@ bool poly_div_test(){
     size_t sep;
     uint8  *ans = poly_div(pa, as, pb, bs, &ans_size, &sep);
 
-    //if(sep != 3) return false;
+    if(sep != 3) return false;
     if(ans_size != 5) return false;
-    if(memcmp(right_ans, ans, 5) == 0) return true;
+    if(memcmp(right_ans, ans, 5 * sizeof(uint8)) == 0) return true;
 
     cout << "poly_div: \nexpected\t";
     for(int i = 0; i < 5; i++)
@@ -141,11 +181,82 @@ bool poly_div_test(){
 }
 
 bool poly_eval_test(){
+    size_t as = 5;
+    uint8 pa[as] = {1, 0, 7, 6, 4};
+    uint8 x = 2;
 
+    uint8 right_ans = 4;
+    uint8 ans = poly_eval(pa, as, x);
+    if(ans == right_ans) return true;
+    return false;
 }
 
 bool init_tables_test(){
-    return true; /* tested manually */
+    static u_int8_t log_right[256] = {
+        0, 0, 1, 25, 2, 50, 26, 198, 3, 223, 51, 238, 27, 104, 199, 75,
+        4, 100, 224, 14, 52, 141, 239, 129, 28, 193, 105, 248, 200, 8, 76, 113,
+        5, 138, 101, 47, 225, 36, 15, 33, 53, 147, 142, 218, 240, 18, 130, 69,
+        29, 181, 194, 125, 106, 39, 249, 185, 201, 154, 9, 120, 77, 228, 114, 166,
+        6, 191, 139, 98, 102, 221, 48, 253, 226, 152, 37, 179, 16, 145, 34, 136,
+        54, 208, 148, 206, 143, 150, 219, 189, 241, 210, 19, 92, 131, 56, 70, 64,
+        30, 66, 182, 163, 195, 72, 126, 110, 107, 58, 40, 84, 250, 133, 186, 61,
+        202, 94, 155, 159, 10, 21, 121, 43, 78, 212, 229, 172, 115, 243, 167, 87,
+        7, 112, 192, 247, 140, 128, 99, 13, 103, 74, 222, 237, 49, 197, 254, 24,
+        227, 165, 153, 119, 38, 184, 180, 124, 17, 68, 146, 217, 35, 32, 137, 46,
+        55, 63, 209, 91, 149, 188, 207, 205, 144, 135, 151, 178, 220, 252, 190, 97,
+        242, 86, 211, 171, 20, 42, 93, 158, 132, 60, 57, 83, 71, 109, 65, 162,
+        31, 45, 67, 216, 183, 123, 164, 118, 196, 23, 73, 236, 127, 12, 111, 246,
+        108, 161, 59, 82, 41, 157, 85, 170, 251, 96, 134, 177, 187, 204, 62, 90,
+        203, 89, 95, 176, 156, 169, 160, 81, 11, 245, 22, 235, 122, 117, 44, 215,
+        79, 174, 213, 233, 230, 231, 173, 232, 116, 214, 244, 234, 168, 80, 88, 175,
+    };
+
+    static u_int8_t exp_right[512] = {
+        1, 2, 4, 8, 16, 32, 64, 128, 29, 58, 116, 232, 205, 135, 19, 38, 76, 152, 45, 90, 180, 117, 234, 201, 143, 3, 6, 12, 24, 48, 96, 192,
+        157, 39, 78, 156, 37, 74, 148, 53, 106, 212, 181, 119, 238, 193, 159, 35, 70, 140, 5, 10, 20, 40, 80, 160, 93, 186, 105, 210, 185, 111, 222, 161,
+        95, 190, 97, 194, 153, 47, 94, 188, 101, 202, 137, 15, 30, 60, 120, 240, 253, 231, 211, 187, 107, 214, 177, 127, 254, 225, 223, 163, 91, 182, 113, 226,
+        217, 175, 67, 134, 17, 34, 68, 136, 13, 26, 52, 104, 208, 189, 103, 206, 129, 31, 62, 124, 248, 237, 199, 147, 59, 118, 236, 197, 151, 51, 102, 204,
+        133, 23, 46, 92, 184, 109, 218, 169, 79, 158, 33, 66, 132, 21, 42, 84, 168, 77, 154, 41, 82, 164, 85, 170, 73, 146, 57, 114, 228, 213, 183, 115,
+        230, 209, 191, 99, 198, 145, 63, 126, 252, 229, 215, 179, 123, 246, 241, 255, 227, 219, 171, 75, 150, 49, 98, 196, 149, 55, 110, 220, 165, 87, 174, 65,
+        130, 25, 50, 100, 200, 141, 7, 14, 28, 56, 112, 224, 221, 167, 83, 166, 81, 162, 89, 178, 121, 242, 249, 239, 195, 155, 43, 86, 172, 69, 138, 9,
+        18, 36, 72, 144, 61, 122, 244, 245, 247, 243, 251, 235, 203, 139, 11, 22, 44, 88, 176, 125, 250, 233, 207, 131, 27, 54, 108, 216, 173, 71, 142, 1,
+        2, 4, 8, 16, 32, 64, 128, 29, 58, 116, 232, 205, 135, 19, 38, 76, 152, 45, 90, 180, 117, 234, 201, 143, 3, 6, 12, 24, 48, 96, 192, 157,
+        39, 78, 156, 37, 74, 148, 53, 106, 212, 181, 119, 238, 193, 159, 35, 70, 140, 5, 10, 20, 40, 80, 160, 93, 186, 105, 210, 185, 111, 222, 161, 95,
+        190, 97, 194, 153, 47, 94, 188, 101, 202, 137, 15, 30, 60, 120, 240, 253, 231, 211, 187, 107, 214, 177, 127, 254, 225, 223, 163, 91, 182, 113, 226, 217,
+        175, 67, 134, 17, 34, 68, 136, 13, 26, 52, 104, 208, 189, 103, 206, 129, 31, 62, 124, 248, 237, 199, 147, 59, 118, 236, 197, 151, 51, 102, 204, 133,
+        23, 46, 92, 184, 109, 218, 169, 79, 158, 33, 66, 132, 21, 42, 84, 168, 77, 154, 41, 82, 164, 85, 170, 73, 146, 57, 114, 228, 213, 183, 115, 230,
+        209, 191, 99, 198, 145, 63, 126, 252, 229, 215, 179, 123, 246, 241, 255, 227, 219, 171, 75, 150, 49, 98, 196, 149, 55, 110, 220, 165, 87, 174, 65, 130,
+        25, 50, 100, 200, 141, 7, 14, 28, 56, 112, 224, 221, 167, 83, 166, 81, 162, 89, 178, 121, 242, 249, 239, 195, 155, 43, 86, 172, 69, 138, 9, 18,
+        36, 72, 144, 61, 122, 244, 245, 247, 243, 251, 235, 203, 139, 11, 22, 44, 88, 176, 125, 250, 233, 207, 131, 27, 54, 108, 216, 173, 71, 142, 1, 2,
+    };
+
+    init_tables();
+
+    bool fail_log = false,
+         fail_exp = false;
+
+    if(memcmp(log, log_right, 256 * sizeof(u_int8_t)) != 0) fail_log = true;
+    if(memcmp(exp, exp_right, 512 * sizeof(u_int8_t)) != 0) fail_exp = true;
+
+    if(!fail_log && !fail_exp) return true;
+
+    if(fail_exp) {
+        std::cout << "init_tables(): Wrong exp table generated\n";
+        for(int i = 0; i < 512; i++){
+            if(exp_right[i] != exp[i]){
+                std::printf("exp[%i]: expected %i, got %i\n", i, exp_right[i], exp[i]);
+            }
+        }
+    }
+    if(fail_log){
+        std::cout << "init_tables(): Wrong log table generated\n";
+        for(int i = 0; i < 256; i++){
+            if(log_right[i] != log[i]){
+                std::printf("log[%i]: expected %i, got %i\n", i, log_right[i], log[i]);
+            }
+        }
+    }
+    return false;
 }
 
 } /* end of test namespace */

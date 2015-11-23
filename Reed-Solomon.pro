@@ -6,7 +6,8 @@ CONFIG -= qt
 SOURCES += main.cpp \
     gf.cpp \
     gf_test.cpp \
-    rs.cpp
+    rs.cpp \
+    rs_test.cpp
 
 HEADERS += \
     gf.hpp \

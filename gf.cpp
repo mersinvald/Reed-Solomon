@@ -1,23 +1,27 @@
 #include "gf.hpp"
 #include <stdexcept>
 #include <memory.h>
+#include <iostream>
 
 namespace gf {
 
-u_int8_t gf_exp[512];
-u_int8_t gf_log[256];
+u_int8_t exp[512];
+u_int8_t log[256];
 
 void init_tables(int prim){
+    memset(exp, 0, 512 * sizeof(u_int8_t));
+    memset(log, 0, 256 * sizeof(u_int8_t));
+
     /* for each value in GF(2^8) we well precompute  the logarithm and anti-logarithm(exponential) of this value */
     int x = 1;
-    for(int i = 0; i < 256; i++){
-        gf_exp[i] = x;
-        gf_log[x] = i;
+    for(int i = 0; i < 255; i++){
+        exp[i] = x;
+        log[x] = i;
         x = mult_noLUT_RPM(x, 2, prim);
     }
 
     for(int i = 255; i < 512; i++){
-        gf_exp[i] = gf_exp[i-255];
+        exp[i] = exp[i-255];
     }
 }
 
@@ -50,21 +54,25 @@ int mult_noLUT_RPM(int x, int y, int prim, int field_charac_full, bool carryless
 
 int mul(int x, int y) {
     if(x == 0 || y == 0) return 0;
-    return gf_exp[gf_log[x] + gf_log[y]];
+    int lx = log[x];
+    int ly = log[y];
+    int lxy = lx+ly;
+    int exy = exp[lxy];
+    return exy;
 }
 
 int div(int x, int y) {
     if(y == 0) throw std::overflow_error("Divide by 0 exception");
     if(x == 0) return 0;
-    return gf_exp[(gf_log[x] + 255 - gf_log[y]) % 255];
+    return exp[(log[x] + 255 - log[y]) % 255];
 }
 
 int pow(int x, int power) {
-    return gf_exp[(gf_log[x] * power) %255];
+    return exp[(log[x] * power) %255];
 }
 
 int inverse(int x) {
-    return gf_exp[255 - gf_log[x]]; /* == div(1, x); */
+    return exp[255 - log[x]]; /* == div(1, x); */
 }
 
 /* polynomials */
@@ -94,10 +102,11 @@ uint8* poly_add(uint8 *p, size_t psize, uint8 *q, size_t qsize, size_t* newsize)
 uint8* poly_mul(uint8 *p, size_t psize, uint8 *q, size_t qsize, size_t *newsize){
     /* pre-allocate resulting array */
     uint8* newp = new uint8[psize + qsize - 1];
+    memset(newp, 0, psize * sizeof(uint8));
     /* Compute the polynomial multiplication (just like the outer product of two vectors,
      * we multiply each coefficients of p with all coefficients of q) */
-    for(int j = 0; j < qsize; j++){
-        for(int i = 0; i < psize; i++){
+    for(uint j = 0; j < qsize; j++){
+        for(uint i = 0; i < psize; i++){
             newp[i+j] ^= mul(p[i], q[j]); /* == r[i + j] = gf_add(r[i+j], gf_mul(p[i], q[j])) */
         }
     }
@@ -106,32 +115,30 @@ uint8* poly_mul(uint8 *p, size_t psize, uint8 *q, size_t qsize, size_t *newsize)
 }
 
 uint8* poly_div(uint8 *p, size_t psize, uint8 *q, size_t qsize, size_t *newsize, size_t *sep_pos){
-    uint8* newp = new uint8[psize];
-    memcpy(newp, p, psize);
+    size_t outsize = psize;
+    uint8* out = new uint8[psize];
+    memcpy(out, p, psize*sizeof(uint8));
 
     uint8 coef;
-    uint8 normalizer = q[0];
 
-    for(uint i = 0; i < psize-qsize-1; i++){
-        newp[i] /= normalizer;
-        coef = newp[i];
-        if(coef != 0) {
+    for(uint i = 0; i < psize-(qsize-1); i++){
+        coef = out[i];
+        if(coef != 0){
             for(uint j = 1; j < qsize; j++){
-                if(q[j] != 0){
-                    newp[i+j] += -q[j] * coef;
-                }
+                if(q[j] != 0)
+                    out[i+j] ^= mul(q[j], coef);
             }
         }
     }
 
     *sep_pos = psize-(qsize-1);
-    *newsize = psize;
-    return newp;
+    *newsize = outsize;
+    return out;
 }
 
 int poly_eval(uint8 *p, size_t psize, int x){
     int y = p[0];
-    for(int i = 0; i < psize; i++){
+    for(uint i = 1; i < psize; i++){
         y = mul(y, x) ^ p[i];
     }
     return y;

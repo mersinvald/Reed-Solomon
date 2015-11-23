@@ -1,5 +1,8 @@
 #include "rs.hpp"
 #include "gf.hpp"
+#include <assert.h>
+#include <memory.h>
+#include <iostream>
 
 namespace RS {
 
@@ -25,13 +28,28 @@ uint8* generator_poly(int nsym, size_t* size){
 }
 
 uint8* encode_msg(uint8 *msg_in, size_t msg_in_size, int nsym, size_t *msg_out_size){
-    size_t gsize;
-    uint8* gen_poly = generator_poly(nsym, &gsize);
+    assert((msg_in_size + nsym) < 256);
 
-    *msg_out_size = msg_in_size+gsize-1;
-    size_t sep;
+    size_t gens;
+    uint8* genp = generator_poly(nsym, &gens);
 
-    return gf::poly_div(msg_in, *msg_out_size, gen_poly, gsize, msg_out_size, &sep);
+    size_t outs = msg_in_size + gens - 1;
+    uint8* out  = new uint8[outs];
+    memset(out, 0, outs * sizeof(uint8));
+    memcpy(out, msg_in, msg_in_size * sizeof(uint8));
+
+    uint8 coef;
+    for(uint i = 0; i < msg_in_size; i++){
+        coef = out[i];
+        if(coef != 0){
+            for(uint j = 1; j < gens; j++){
+                out[i+j] ^= gf::mul(genp[j], coef);
+            }
+        }
+    }
+    memcpy(out, msg_in, msg_in_size * sizeof(uint8));
+    *msg_out_size = outs;
+    return out;
 }
 
 }
