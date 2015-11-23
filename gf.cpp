@@ -27,7 +27,15 @@ void init_tables(int prim){
 
 /* Galua Field ariphmetics */
 
-int mult_noLUT(int x, int y, int prim){
+uint8 add(uint8 x, uint8 y){
+    return x^y;
+}
+
+uint8 sub(uint8 x, uint8 y){
+    return x^y;
+}
+
+int mult_noLUT(uint8 x, uint8 y, int prim){
     int result = _inner::cl_mult(x, y);
     /* do a modular reduction (ie, remainder from the division)
      * with an irreducible primitive polynomial so that it stays inside GF bounds */
@@ -38,8 +46,8 @@ int mult_noLUT(int x, int y, int prim){
     return result;
 }
 
-int mult_noLUT_RPM(int x, int y, int prim, int field_charac_full, bool carryless){
-    int r = 0;
+uint8 mult_noLUT_RPM(int x, int y, int prim, int field_charac_full, bool carryless){
+    uint8 r = 0;
     /* while y is not 0 */
     while(y){
         if(y & 0x1)
@@ -52,26 +60,22 @@ int mult_noLUT_RPM(int x, int y, int prim, int field_charac_full, bool carryless
     return r;
 }
 
-int mul(int x, int y) {
+uint8 mul(ushort x, ushort y) {
     if(x == 0 || y == 0) return 0;
-    int lx = log[x];
-    int ly = log[y];
-    int lxy = lx+ly;
-    int exy = exp[lxy];
-    return exy;
+    return exp[log[x] + log[y]];
 }
 
-int div(int x, int y) {
+uint8 div(uint8 x, uint8 y) {
     if(y == 0) throw std::overflow_error("Divide by 0 exception");
     if(x == 0) return 0;
     return exp[(log[x] + 255 - log[y]) % 255];
 }
 
-int pow(int x, int power) {
+uint8 pow(uint8 x, int power) {
     return exp[(log[x] * power) %255];
 }
 
-int inverse(int x) {
+uint8 inverse(uint8 x) {
     return exp[255 - log[x]]; /* == div(1, x); */
 }
 
@@ -80,7 +84,7 @@ int inverse(int x) {
 uint8* poly_scale(uint8 *p, size_t psize, int x, size_t* newsize){
     uint8* newp = new uint8[psize];
     *newsize = psize;
-    for(int i = 0; i < psize; i++){
+    for(uint i = 0; i < psize; i++){
         newp[i] = mul(p[i], x);
     }
     return newp;
@@ -89,10 +93,10 @@ uint8* poly_scale(uint8 *p, size_t psize, int x, size_t* newsize){
 uint8* poly_add(uint8 *p, size_t psize, uint8 *q, size_t qsize, size_t* newsize){
     uint newps = std::max(psize, qsize);
     uint8* newp = new uint8[newps];
-    for(int i = 0; i < psize; i++){
+    for(uint i = 0; i < psize; i++){
         newp[i + newps - psize] = p[i];
     }
-    for(int i = 0; i < qsize; i++){
+    for(uint i = 0; i < qsize; i++){
         newp[i + newps - qsize] ^= q[i];
     }
     *newsize = newps;
@@ -114,7 +118,7 @@ uint8* poly_mul(uint8 *p, size_t psize, uint8 *q, size_t qsize, size_t *newsize)
     return newp;
 }
 
-uint8* poly_div(uint8 *p, size_t psize, uint8 *q, size_t qsize, size_t *newsize, size_t *sep_pos){
+uint8* poly_div(uint8 *p, size_t psize, uint8 *q, size_t qsize, size_t *newsize){
     size_t outsize = psize;
     uint8* out = new uint8[psize];
     memcpy(out, p, psize*sizeof(uint8));
@@ -131,13 +135,15 @@ uint8* poly_div(uint8 *p, size_t psize, uint8 *q, size_t qsize, size_t *newsize,
         }
     }
 
-    *sep_pos = psize-(qsize-1);
-    *newsize = outsize;
+    size_t sep = psize-(qsize-1);
+    memmove(out, out+sep, (outsize-sep) * sizeof(uint8));
+    realloc(out, outsize-(outsize+sep));
+    *newsize = (outsize-sep);
     return out;
 }
 
 int poly_eval(uint8 *p, size_t psize, int x){
-    int y = p[0];
+    uint8 y = p[0];
     for(uint i = 1; i < psize; i++){
         y = mul(y, x) ^ p[i];
     }
@@ -148,8 +154,8 @@ int poly_eval(uint8 *p, size_t psize, int x){
 
 namespace gf {
 namespace _inner {
-int bit_len(int n) {
-    int bits = 0;
+uint bit_len(int n) {
+    uint bits = 0;
     while(n >> bits) bits++;
     return bits;
 }

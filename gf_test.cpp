@@ -7,25 +7,25 @@ namespace gf {
 
 namespace test {
 void run_tests(){
-    cout << "Testing gf::_inner::bit_len(): \t" << ((gf::test::_inner::bit_len_test()) ? "SUCCESS" : "FAILURE") << endl;
-    cout << "Testing gf::_inner::cl_mult(): \t" << ((gf::test::_inner::cl_mult_test()) ? "SUCCESS" : "FAILURE") << endl;
-    cout << "Testing gf::_inner::cl_div(): \t" << ((gf::test::_inner::cl_div_test()) ? "SUCCESS" : "FAILURE") << endl;
-    cout << "Testing gf::mult_noLUT(): \t" << ((gf::test::mult_noLUT_test()) ? "SUCCESS" : "FAILURE") << endl;
-    cout << "Testing gf::mult_noLUT_RPM(): \t" << ((gf::test::mult_noLUT_RPM_test()) ? "SUCCESS" : "FAILURE") << endl;
-    cout << "Testing gf::init_tables(): \t" << ((gf::test::init_tables_test()) ? "SUCCESS" : "FAILURE") << endl;
+    cout << "Testing gf::_inner::bit_len():\t" << ((gf::test::_inner::bit_len_test()) ? "SUCCESS" : "FAILURE") << endl;
+    cout << "Testing gf::_inner::cl_mult():\t" << ((gf::test::_inner::cl_mult_test()) ? "SUCCESS" : "FAILURE") << endl;
+    cout << "Testing gf::_inner::cl_div():\t" << ((gf::test::_inner::cl_div_test()) ? "SUCCESS" : "FAILURE") << endl;
+    cout << "Testing gf::mult_noLUT():\t" << ((gf::test::mult_noLUT_test()) ? "SUCCESS" : "FAILURE") << endl;
+    cout << "Testing gf::mult_noLUT_RPM():\t" << ((gf::test::mult_noLUT_RPM_test()) ? "SUCCESS" : "FAILURE") << endl;
+    cout << "Testing gf::init_tables():\t" << ((gf::test::init_tables_test()) ? "SUCCESS" : "FAILURE") << endl;
 
     cout << "\n";
-    cout << "Testing gf::mul(): \t" << ((gf::test::mul_test()) ? "SUCCESS" : "FAILURE") << endl;
-    cout << "Testing gf::div(): \t" << ((gf::test::div_test()) ? "SUCCESS" : "FAILURE") << endl;
-    cout << "Testing gf::pow(): \t" << ((gf::test::pow_test()) ? "SUCCESS" : "FAILURE") << endl;
-    cout << "Testing gf::inverse(): \t" << ((gf::test::inverse_test()) ? "SUCCESS" : "FAILURE") << endl;
+    cout << "Testing gf::mul():\t\t" << ((gf::test::mul_test()) ? "SUCCESS" : "FAILURE") << endl;
+    cout << "Testing gf::div():\t\t" << ((gf::test::div_test()) ? "SUCCESS" : "FAILURE") << endl;
+    cout << "Testing gf::pow():\t\t" << ((gf::test::pow_test()) ? "SUCCESS" : "FAILURE") << endl;
+    cout << "Testing gf::inverse():\t\t" << ((gf::test::inverse_test()) ? "SUCCESS" : "FAILURE") << endl;
 
     cout << "\n";
-    cout << "Testing gf::poly_scale(): \t" << ((gf::test::poly_scale_test()) ? "SUCCESS" : "FAILURE") << endl;
-    cout << "Testing gf::poly_add(): \t" << ((gf::test::poly_add_test()) ? "SUCCESS" : "FAILURE") << endl;
-    cout << "Testing gf::poly_mul(): \t" << ((gf::test::poly_mul_test()) ? "SUCCESS" : "FAILURE") << endl;
-    cout << "Testing gf::poly_div(): \t" << ((gf::test::poly_div_test()) ? "SUCCESS" : "FAILURE") << endl;
-    cout << "Testing gf::poly_eval(): \t" << ((gf::test::poly_eval_test()) ? "SUCCESS" : "FAILURE") << endl;
+    cout << "Testing gf::poly_scale():\t" << ((gf::test::poly_scale_test()) ? "SUCCESS" : "FAILURE") << endl;
+    cout << "Testing gf::poly_add():\t\t" << ((gf::test::poly_add_test()) ? "SUCCESS" : "FAILURE") << endl;
+    cout << "Testing gf::poly_mul():\t\t" << ((gf::test::poly_mul_test()) ? "SUCCESS" : "FAILURE") << endl;
+    cout << "Testing gf::poly_div():\t\t" << ((gf::test::poly_div_test()) ? "SUCCESS" : "FAILURE") << endl;
+    cout << "Testing gf::poly_eval():\t" << ((gf::test::poly_eval_test()) ? "SUCCESS" : "FAILURE") << endl;
 }
 
 bool mult_noLUT_test(){
@@ -160,21 +160,18 @@ bool poly_div_test(){
     uint8 pa[as] = {1, 0, 7, 6, 4};
     uint8 pb[bs] = {1, 6, 3};
 
-    uint8 right_ans[5] = {1, 6, 16, 108, 52};
+    uint8 right_ans[2] = {108, 52};
 
     size_t ans_size;
-    size_t sep;
-    uint8  *ans = poly_div(pa, as, pb, bs, &ans_size, &sep);
+    uint8  *ans = poly_div(pa, as, pb, bs, &ans_size);
 
-    if(sep != 3) return false;
-    if(ans_size != 5) return false;
-    if(memcmp(right_ans, ans, 5 * sizeof(uint8)) == 0) return true;
+    if(memcmp(right_ans, ans, 2 * sizeof(uint8)) == 0) return true;
 
     cout << "poly_div: \nexpected\t";
-    for(int i = 0; i < 5; i++)
+    for(int i = 0; i < 2; i++)
         cout << (int)right_ans[i] << " ";
     cout << "\ngot\t\t";
-    for(int i = 0; i < 5; i++)
+    for(uint i = 0; i < ans_size; i++)
         cout << (int)ans[i] << " ";
     cout << endl;
     return false;

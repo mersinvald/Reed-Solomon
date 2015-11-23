@@ -24,7 +24,7 @@ void init_tables(int prim = 0x11d);
  * @param y - right operand
  * @return result of addition
  */
-inline int add(int x, int y);
+uint8 add(uint8 x, uint8 y);
 
 /* ##### GF substraction ###### */
 /* @brief Substraction in Galua Fields
@@ -32,7 +32,7 @@ inline int add(int x, int y);
  * @param y - right operand
  * @return result of substraction
  */
-inline int sub(int x, int y);
+uint8 sub(uint8 x, uint8 y);
 
 /* @brief Multiplication in Galua Fields without lookup table (slow)
  * @param x - left operand
@@ -40,7 +40,7 @@ inline int sub(int x, int y);
  * @param prim - primitive polinominal of GF
  * @return result of multiplication
  */
-int mult_noLUT(int x, int y, int prim = 0);
+int mult_noLUT(uint8 x, uint8 y, int prim = 0);
 
 /* @brief Multiplication in Galua Fields w/o lookup table, Russian Peasant Multiplication algorithm
  * @param x - left operand
@@ -49,34 +49,34 @@ int mult_noLUT(int x, int y, int prim = 0);
  * @param field_charac_full -
  * @return result of multiplication
  */
-int mult_noLUT_RPM(int x, int y, int prim = 0, int field_charac_full = 256, bool carryless = true);
+uint8 mult_noLUT_RPM(int x, int y, int prim = 0, int field_charac_full = 256, bool carryless = true);
 
 /* @brief Multiplication in Galua Fields w/ lookup table (needs to be initialized)
  * @param x - left operand
  * @param y - right operand
  * @return result of multiplication
  */
-int mul(int x, int y);
+uint8 mul(ushort x, ushort y);
 
 /* @brief Division in Galua Fields w/ lookup table (needs to be initialized)
  * @param x - dividend
  * @param y - divisor
  * @return result of division
  */
-int div(int x, int y);
+uint8 div(uint8 x, uint8 y);
 
 /* @brief X in power Y w/ lookup table (needs to be initialized)
  * @param x - operand
  * @param power - power
  * @return x^power
  */
-int pow(int x, int power);
+uint8 pow(uint8 x, int power);
 
 /* @brief Inversion in Galua Fields w/ lookup table (needs to be initialized)
  * @param x - number
  * @return inversion of x
  */
-int inverse(int x);
+uint8 inverse(uint8 x);
 
 /* ##########################
  * # POLYNOMIALS OPERATIONS #
@@ -122,9 +122,9 @@ uint8* poly_mul(uint8* p, size_t psize, uint8* q, size_t qsize, size_t* newsize)
  * @param *newp - pointer to new polynomial
  * @param *newsize - pointer to size of new polynomial
  * @param *sep_pos - pointer to position of separator between data and RS code
- * @return pointer to new polunomial
+ * @return pointer to remainder
  */
-uint8* poly_div(uint8* p, size_t psize, uint8* q, size_t qsize, size_t* newsize, size_t* sep_pos);
+uint8* poly_div(uint8* p, size_t psize, uint8* q, size_t qsize, size_t* newsize);
 
 /* @brief Evaluation of polynomial in x
  * @param *p - polynomial pointer
@@ -136,7 +136,7 @@ int poly_eval(uint8* p, size_t psize, int x);
 namespace _inner {
 /* GF multiplication sub-funcs */
 /* computes the biggest 1 bit of integer */
-int bit_len(int n);
+uint bit_len(int n);
 /* carry-less multiplication on integers */
 int cl_mult(int x, int y);
 /* carry-less long division on integers, returns the reminder */

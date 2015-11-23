@@ -4,8 +4,11 @@
 #include <memory.h>
 #include <iostream>
 
-namespace RS {
+/* ################
+ * ### ENCODING ###
+ * ################ */
 
+namespace RS {
 uint8* generator_poly(int nsym, size_t* size){
     uint8* g = new uint8[1];
     uint8* temp;
@@ -50,6 +53,173 @@ uint8* encode_msg(uint8 *msg_in, size_t msg_in_size, int nsym, size_t *msg_out_s
     memcpy(out, msg_in, msg_in_size * sizeof(uint8));
     *msg_out_size = outs;
     return out;
+}
+}
+
+/* ################
+ * ### DECODING ###
+ * ################ */
+
+namespace RS {
+
+uint8* calc_syndromes(uint8 *msg, size_t msg_size, uint nsym, size_t *synd_size){
+    uint8* synd = (uint8*) calloc(nsym+1, (nsym+1) * sizeof(uint8));
+    for(uint i = 1; i < nsym+1; i++){
+        synd[i] = gf::poly_eval(msg, msg_size, gf::pow(2, i-1));
+    }
+    *synd_size = nsym+1;
+    return synd;
+}
+
+bool check(uint8 *msg, size_t msg_size, int nsym){
+     size_t synd_size;
+    uint8* synd = calc_syndromes(msg, msg_size, nsym, &synd_size);
+
+    for(uint i = 0; i < synd_size; i++){
+        if(synd[i] != 0) return false;
+    }
+    return true;
+}
+
+uint8* find_errata_locator(uint8 *e_pos, size_t e_pos_size, size_t *errloc_size){
+    uint8* e_loc = new uint8[1];
+    size_t eloc_size = 1;
+    uint8* temp;
+
+    uint8 mulp[1];
+    uint8 addp[2];
+
+    size_t asize;
+    uint8* aptr;
+
+    for(uint i = 0; i < e_pos_size; i++){
+        mulp[0] = 1;
+        addp[0] = gf::pow(2, e_pos[i]);
+        addp[1] = 0;
+
+        aptr = gf::poly_add(mulp, 1, addp, 2, &asize);
+        temp = gf::poly_mul(e_loc, eloc_size, aptr, asize, &eloc_size);
+
+        delete aptr;
+        delete e_loc;
+
+        e_loc = temp;
+    }
+
+    *errloc_size = eloc_size;
+    return e_loc;
+}
+
+uint8* find_error_evaluator(uint8 *synd, size_t synd_size, uint8 *err_loc, size_t err_loc_size, int nsym, size_t *err_eval_size){
+    size_t mulps;
+    uint8* mulp = gf::poly_mul(synd, synd_size, err_loc, err_loc_size, &mulps);
+
+    uint8* divisor = new uint8[nsym+2];
+    memset(divisor, 0, (nsym+2)*sizeof(uint8));
+    divisor[0] = 1;
+
+    uint8* remainder =  gf::poly_div(mulp, mulps, divisor, nsym+2, err_eval_size);
+
+    delete mulp;
+    delete divisor;
+
+    return remainder;
+}
+
+uint8* correct_errata(uint8 *msg_in, size_t msg_in_size, uint8 *synd, size_t synd_size, uint8 *err_pos, size_t epos_size, size_t *newsize){
+    uint8 coef_pos[epos_size];
+    for(uint i = 0; i < epos_size; i++)
+        coef_pos[i] = msg_in_size - 1 - err_pos[i];
+
+    size_t eloc_size;
+    uint8 *err_loc = find_errata_locator(coef_pos, epos_size, &eloc_size);
+
+    /* reversing synd */
+    uint8* rsynd = new uint8[synd_size];
+    for(int i = synd_size, j = 0; i >= 0; --i, j++)
+        rsynd[j] = synd[i];
+
+    /* getting reversed error evaluator polynomial */
+    size_t eeval_size;
+    uint8 *rerr_eval = find_error_evaluator(synd, synd_size, err_loc, eloc_size, eloc_size-1, &eeval_size);
+
+    /* reversing it back */
+    uint8 *err_val = new uint8[eeval_size];
+    for(int i = eeval_size, j = 0; i >= 0; --i, j++)
+        err_val[j] = rerr_eval[i];
+
+    /* freeing temporary polys */
+    //delete rsynd;
+    //delete rerr_eval;
+
+    /* @TODO: use half-dynamic arrays everywrere */
+    size_t Xlen;
+    uint8 X[msg_in_size];     /* this will store errors positions */
+    memset(X, 0, msg_in_size);
+    uint8 l;
+    for(uint i = 0; i < epos_size; i++){
+        l = 255 - coef_pos[i];
+        X[(Xlen++)-1] = gf::pow(2, -l);
+    }
+
+    /* Magnitude polynomial */
+    size_t &Esize = msg_in_size;
+    uint8 E[msg_in_size];
+    memset(E, 0, msg_in_size);
+
+    uint8 Xi_inv;
+
+    size_t elp_temp_len = 0;
+    size_t elp_temp_maxlen = Xlen*Xlen;
+    uint8 err_loc_prime_temp[elp_temp_maxlen];
+    uint8 err_loc_prime;
+    uint8 y;
+
+    for(uint i = 0; i < Xlen; i++){
+        Xi_inv = gf::inverse(X[i]);
+
+        elp_temp_len = 0;
+        for(uint j = 0; j < Xlen; j++){
+            if(j != i){
+                err_loc_prime_temp[(elp_temp_len++)-1] = gf::sub(1, gf::mul(Xi_inv, X[i]));
+            }
+        }
+
+        err_loc_prime = 1;
+        for(uint j = 0; j < elp_temp_len; j++){
+            err_loc_prime = gf::mul(err_loc_prime, err_loc_prime_temp[i]);
+        }
+
+        y = gf::poly_eval(rerr_eval, eeval_size, Xi_inv);
+        y = gf::mul(gf::pow(X[i], 1), y);
+
+        E[err_pos[i]] = gf::div(y, err_loc_prime);
+    }
+
+    msg_in = gf::poly_add(msg_in, msg_in_size, E, Esize, newsize);
+
+
+    /* freeing temporary polys */
+    delete rsynd;
+    delete rerr_eval;
+
+    return msg_in;
+}
+
+uint8* find_error_locator(uint8 *synd, size_t synd_size, uint8 *erase_loc, size_t erase_loc_size, size_t erace_count){
+
+}
+
+uint8* find_errors(uint8 *err_loc, size_t eloc_size, size_t msg_in_size){
+
+}
+
+uint8* forney_syndromes(uint8 *synd, size_t synd_size, size_t msg_in_size){
+
+}
+
+uint8* correct_msg(uint8 *msg_in, size_t msg_in_size, int nsym, uint8 *erase_pos, size_t epos_size){
+
 }
 
 }
