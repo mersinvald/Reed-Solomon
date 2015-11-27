@@ -43,7 +43,7 @@ uint8* find_error_evaluator(uint8* synd, size_t synd_size, uint8* err_loc, size_
 
 uint8* correct_errata(uint8* msg_in, size_t msg_in_size, uint8* synd, size_t synd_size, uint8* err_pos, size_t epos_size, size_t* newsize);
 
-uint8* find_error_locator(uint8* synd, size_t synd_size, uint8* erase_loc = NULL, size_t erase_loc_size = 0, size_t erace_count = 0);
+uint8* find_error_locator(uint8* synd, size_t synd_size, int nsym, size_t *newsize, uint8* erase_loc = NULL, size_t erase_loc_size = 0, size_t erase_count = 0);
 
 uint8* find_errors(uint8* err_loc, size_t eloc_size, size_t msg_in_size);
 
@@ -55,6 +55,10 @@ uint8* correct_msg(uint8* msg_in, size_t msg_in_size, int nsym, uint8* erase_pos
 
 
 namespace test {
+
+template<typename T>
+void print_array(T *array, int count);
+
 void run_tests();
 bool generator_poly_test();
 bool encode_msg_test();

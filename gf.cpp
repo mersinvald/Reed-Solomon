@@ -72,7 +72,9 @@ uint8 div(uint8 x, uint8 y) {
 }
 
 uint8 pow(uint8 x, int power) {
-    return exp[(log[x] * power) %255];
+    int i = (log[x] * power) % 255;
+    if(i < 0) i = i + 255;
+    return exp[i];
 }
 
 uint8 inverse(uint8 x) {
@@ -93,6 +95,7 @@ uint8* poly_scale(uint8 *p, size_t psize, int x, size_t* newsize){
 uint8* poly_add(uint8 *p, size_t psize, uint8 *q, size_t qsize, size_t* newsize){
     uint newps = std::max(psize, qsize);
     uint8* newp = new uint8[newps];
+    memset(newp, 0, newps * sizeof(uint8));
     for(uint i = 0; i < psize; i++){
         newp[i + newps - psize] = p[i];
     }

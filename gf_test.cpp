@@ -7,25 +7,28 @@ namespace gf {
 
 namespace test {
 void run_tests(){
-    cout << "Testing gf::_inner::bit_len():\t" << ((gf::test::_inner::bit_len_test()) ? "SUCCESS" : "FAILURE") << endl;
-    cout << "Testing gf::_inner::cl_mult():\t" << ((gf::test::_inner::cl_mult_test()) ? "SUCCESS" : "FAILURE") << endl;
-    cout << "Testing gf::_inner::cl_div():\t" << ((gf::test::_inner::cl_div_test()) ? "SUCCESS" : "FAILURE") << endl;
-    cout << "Testing gf::mult_noLUT():\t" << ((gf::test::mult_noLUT_test()) ? "SUCCESS" : "FAILURE") << endl;
-    cout << "Testing gf::mult_noLUT_RPM():\t" << ((gf::test::mult_noLUT_RPM_test()) ? "SUCCESS" : "FAILURE") << endl;
-    cout << "Testing gf::init_tables():\t" << ((gf::test::init_tables_test()) ? "SUCCESS" : "FAILURE") << endl;
+    cout << "Testing gf::_inner::bit_len():\t\t" << ((gf::test::_inner::bit_len_test()) ? "SUCCESS" : "FAILURE") << endl;
+    cout << "Testing gf::_inner::cl_mult():\t\t" << ((gf::test::_inner::cl_mult_test()) ? "SUCCESS" : "FAILURE") << endl;
+    cout << "Testing gf::_inner::cl_div():\t\t" << ((gf::test::_inner::cl_div_test()) ? "SUCCESS" : "FAILURE") << endl;
+    cout << "Testing gf::mult_noLUT():\t\t" << ((gf::test::mult_noLUT_test()) ? "SUCCESS" : "FAILURE") << endl;
+    cout << "Testing gf::mult_noLUT_RPM():\t\t" << ((gf::test::mult_noLUT_RPM_test()) ? "SUCCESS" : "FAILURE") << endl;
+    cout << "Testing gf::init_tables():\t\t" << ((gf::test::init_tables_test()) ? "SUCCESS" : "FAILURE") << endl;
 
     cout << "\n";
-    cout << "Testing gf::mul():\t\t" << ((gf::test::mul_test()) ? "SUCCESS" : "FAILURE") << endl;
-    cout << "Testing gf::div():\t\t" << ((gf::test::div_test()) ? "SUCCESS" : "FAILURE") << endl;
-    cout << "Testing gf::pow():\t\t" << ((gf::test::pow_test()) ? "SUCCESS" : "FAILURE") << endl;
-    cout << "Testing gf::inverse():\t\t" << ((gf::test::inverse_test()) ? "SUCCESS" : "FAILURE") << endl;
+    cout << "Testing gf::mul():\t\t\t" << ((gf::test::mul_test()) ? "SUCCESS" : "FAILURE") << endl;
+    cout << "Testing gf::div():\t\t\t" << ((gf::test::div_test()) ? "SUCCESS" : "FAILURE") << endl;
+    cout << "Testing gf::pow():\t\t\t" << ((gf::test::pow_test()) ? "SUCCESS" : "FAILURE") << endl;
+    cout << "Testing gf::inverse():\t\t\t" << ((gf::test::inverse_test()) ? "SUCCESS" : "FAILURE") << endl;
 
     cout << "\n";
-    cout << "Testing gf::poly_scale():\t" << ((gf::test::poly_scale_test()) ? "SUCCESS" : "FAILURE") << endl;
-    cout << "Testing gf::poly_add():\t\t" << ((gf::test::poly_add_test()) ? "SUCCESS" : "FAILURE") << endl;
-    cout << "Testing gf::poly_mul():\t\t" << ((gf::test::poly_mul_test()) ? "SUCCESS" : "FAILURE") << endl;
-    cout << "Testing gf::poly_div():\t\t" << ((gf::test::poly_div_test()) ? "SUCCESS" : "FAILURE") << endl;
-    cout << "Testing gf::poly_eval():\t" << ((gf::test::poly_eval_test()) ? "SUCCESS" : "FAILURE") << endl;
+    cout << "Testing gf::poly_scale():\t\t" << ((gf::test::poly_scale_test()) ? "SUCCESS" : "FAILURE") << endl;
+    cout << "Testing gf::poly_add():\t\t\t" << ((gf::test::poly_add_test()) ? "SUCCESS" : "FAILURE") << endl;
+    cout << "Testing gf::poly_mul():\t\t\t" << ((gf::test::poly_mul_test()) ? "SUCCESS" : "FAILURE") << endl;
+    cout << "Testing gf::poly_div():\t\t\t" << ((gf::test::poly_div_test()) ? "SUCCESS" : "FAILURE") << endl;
+    cout << "Testing gf::poly_div():\t\t\t" << ((gf::test::poly_div_test()) ? "SUCCESS" : "FAILURE") << endl;
+    cout << "Testing gf::poly_div():\t\t\t" << ((gf::test::poly_div_test()) ? "SUCCESS" : "FAILURE") << endl;
+    cout << "Testing gf::poly_div():\t\t\t" << ((gf::test::poly_div_test()) ? "SUCCESS" : "FAILURE") << endl;
+    cout << "Testing gf::poly_eval():\t\t" << ((gf::test::poly_eval_test()) ? "SUCCESS" : "FAILURE") << endl;
 }
 
 bool mult_noLUT_test(){
@@ -78,13 +81,31 @@ bool div_test(){
 }
 
 bool pow_test(){
-    int x = 0b10001001;
-    int p = 8;
+    int x = 2;
+    int16_t cases[] = {
+        234, 1, 24, 65, 97, 155,
+        -40, -30, -1, -140, -254
+    };
+    uint8 right_answers[] = {
+        251, 2, 143, 190, 175, 114,
+        239, 36, 142, 124, 2
+    };
+    uint8 answers[11];
 
-    int right_ans = 0b11010011; // 211d
-    int ans = gf::pow(x, p);
+    for(uint i = 0; i < 11; i++)
+        answers[i] = pow(x, cases[i]);
 
-    if(right_ans == ans) return true;
+    if(memcmp(right_answers, answers, sizeof(answers)) == 0) return true;
+
+    cout << "pow(): \nexpected\t";
+    for(int i = 0; i < 11; i++)
+        cout << (int)right_answers[i] << " ";
+    cout << "\ngot\t\t";
+    for(uint i = 0; i < 11; i++)
+        cout << (int)answers[i] << " ";
+    cout << endl;
+    return false;
+
     return false;
 }
 
