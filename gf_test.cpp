@@ -6,7 +6,36 @@ using namespace std;
 namespace gf {
 
 namespace test {
+
+PolyHandler *PH;
+
+template<typename T>
+void print_array(T *array, int count){
+    for(int i = 0; i < count; i++){
+        std::cout << (int)array[i] << " ";
+    }
+    std::cout << std::endl;
+}
+
+
+template<typename T>
+void print_array(T array, int count){
+    for(int i = 0; i < count; i++){
+        std::cout << (int)array[i] << " ";
+    }
+    std::cout << std::endl;
+}
+
 void run_tests(){
+
+    PolyHandler p(16, 8, INIT_ALL);
+
+    ALLOC_MEMORY(p);
+    ALLOC_POLY(p);
+
+    p.init();
+    PH = &p;
+
     cout << "Testing gf::_inner::bit_len():\t\t" << ((gf::test::_inner::bit_len_test()) ? "SUCCESS" : "FAILURE") << endl;
     cout << "Testing gf::_inner::cl_mult():\t\t" << ((gf::test::_inner::cl_mult_test()) ? "SUCCESS" : "FAILURE") << endl;
     cout << "Testing gf::_inner::cl_div():\t\t" << ((gf::test::_inner::cl_div_test()) ? "SUCCESS" : "FAILURE") << endl;
@@ -125,13 +154,17 @@ bool poly_scale_test(){
     uint8 scalar = 8;
 
     uint8 right_ans[5] = {8, 0, 56, 48, 32};
+    uint8 an    = T_POLY1;
+    uint8 ransn = T_POLY3;
+    uint8 ansn  = T_POLY4;
 
-    size_t ans_size;
-    uint8  *ans = poly_scale(pa, as, scalar, &ans_size);
+    PH->set_poly(an, pa, as);
+    PH->set_poly(ransn, right_ans, 5);
 
-    if(ans_size != 5) return false;
-    if(memcmp(right_ans, ans, 5 * sizeof(uint8)) != 0) return false;
-    return true;
+    poly_scale(PH->poly(an), PH->poly(ansn), scalar);
+
+    if(PH->poly(ansn) == PH->poly(ransn)) return true;
+    return false;
 }
 
 bool poly_add_test(){
@@ -142,11 +175,18 @@ bool poly_add_test(){
 
     uint8 right_ans[5] = {1, 0, 6, 0, 7};
 
-    size_t ans_size;
-    uint8  *ans = poly_add(pa, as, pb, bs, &ans_size);
+    uint8 an    = T_POLY1;
+    uint8 bn    = T_POLY2;
+    uint8 ransn = T_POLY3;
+    uint8 ansn  = T_POLY4;
 
-    if(ans_size != 5) return false;
-    if(memcmp(right_ans, ans, 5 * sizeof(uint8)) == 0) return true;
+    PH->set_poly(an, pa, as);
+    PH->set_poly(bn, pb, bs);
+    PH->set_poly(ransn, right_ans, 5);
+
+    poly_add(PH->poly(an), PH->poly(bn), PH->poly(ansn));
+
+    if(PH->poly(ansn) == PH->poly(ransn)) return true;
     return false;
 }
 
@@ -158,19 +198,23 @@ bool poly_mul_test(){
 
     uint8 right_ans[7] = {1, 6, 4, 20, 25, 18, 12};
 
-    size_t ans_size;
-    uint8  *ans = poly_mul(pa, as, pb, bs, &ans_size);
+    uint8 an    = T_POLY1;
+    uint8 bn    = T_POLY2;
+    uint8 ransn = T_POLY3;
+    uint8 ansn  = T_POLY4;
 
-    if(ans_size != 7) goto fail;
-    if(memcmp(right_ans, ans, 7 * sizeof(uint8)) == 0) return true;
+    PH->set_poly(an, pa, as);
+    PH->set_poly(bn, pb, bs);
+    PH->set_poly(ransn, right_ans, 7);
 
-fail:
+    poly_mul(PH->poly(an), PH->poly(bn), PH->poly(ansn));
+
+    if(PH->poly(ansn) == PH->poly(ransn)) return true;
+
     cout << "poly_mul: \nexpected\t";
-    for(uint i = 0; i < 7; i++)
-        cout << (int)right_ans[i] << " ";
+    print_array(PH->poly(ransn), PH->poly(ransn).len);
     cout << "\ngot\t\t";
-    for(uint i = 0; i < ans_size; i++)
-        cout << (int)ans[i] << " ";
+    print_array(PH->poly(ansn), PH->poly(ansn).len);
     cout << endl;
     return false;
 }
@@ -183,19 +227,26 @@ bool poly_div_test(){
 
     uint8 right_ans[2] = {108, 52};
 
-    size_t ans_size;
-    uint8  *ans = poly_div(pa, as, pb, bs, &ans_size);
+    uint8 an    = T_POLY1;
+    uint8 bn    = T_POLY2;
+    uint8 ransn = T_POLY3;
+    uint8 ansn  = T_POLY4;
 
-    if(memcmp(right_ans, ans, 2 * sizeof(uint8)) == 0) return true;
+    PH->set_poly(an, pa, as);
+    PH->set_poly(bn, pb, bs);
+    PH->set_poly(ransn, right_ans, 2);
+
+    poly_div(PH->poly(an), PH->poly(bn), PH->poly(ansn));
+
+    if(PH->poly(ansn) == PH->poly(ransn)) return true;
 
     cout << "poly_div: \nexpected\t";
-    for(int i = 0; i < 2; i++)
-        cout << (int)right_ans[i] << " ";
+    print_array(PH->poly(ransn), PH->poly(ransn).len);
     cout << "\ngot\t\t";
-    for(uint i = 0; i < ans_size; i++)
-        cout << (int)ans[i] << " ";
+    print_array(PH->poly(ansn), PH->poly(ansn).len);
     cout << endl;
     return false;
+
 }
 
 bool poly_eval_test(){
@@ -203,14 +254,18 @@ bool poly_eval_test(){
     uint8 pa[as] = {1, 0, 7, 6, 4};
     uint8 x = 2;
 
+    uint8 an = T_POLY1;
+    PH->set_poly(an, pa, as);
+
     uint8 right_ans = 4;
-    uint8 ans = poly_eval(pa, as, x);
+    uint8 ans = poly_eval(PH->poly(an), x);
+
     if(ans == right_ans) return true;
     return false;
 }
 
 bool init_tables_test(){
-    static u_int8_t log_right[256] = {
+    const u_int8_t log_right[256] = {
         0, 0, 1, 25, 2, 50, 26, 198, 3, 223, 51, 238, 27, 104, 199, 75,
         4, 100, 224, 14, 52, 141, 239, 129, 28, 193, 105, 248, 200, 8, 76, 113,
         5, 138, 101, 47, 225, 36, 15, 33, 53, 147, 142, 218, 240, 18, 130, 69,
@@ -229,7 +284,7 @@ bool init_tables_test(){
         79, 174, 213, 233, 230, 231, 173, 232, 116, 214, 244, 234, 168, 80, 88, 175,
     };
 
-    static u_int8_t exp_right[512] = {
+    const u_int8_t exp_right[512] = {
         1, 2, 4, 8, 16, 32, 64, 128, 29, 58, 116, 232, 205, 135, 19, 38, 76, 152, 45, 90, 180, 117, 234, 201, 143, 3, 6, 12, 24, 48, 96, 192,
         157, 39, 78, 156, 37, 74, 148, 53, 106, 212, 181, 119, 238, 193, 159, 35, 70, 140, 5, 10, 20, 40, 80, 160, 93, 186, 105, 210, 185, 111, 222, 161,
         95, 190, 97, 194, 153, 47, 94, 188, 101, 202, 137, 15, 30, 60, 120, 240, 253, 231, 211, 187, 107, 214, 177, 127, 254, 225, 223, 163, 91, 182, 113, 226,

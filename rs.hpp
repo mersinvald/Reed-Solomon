@@ -1,63 +1,56 @@
 #ifndef RS_HPP
 #define RS_HPP
 #include <stdlib.h>
+#include "polyhandler.h"
 typedef u_int8_t uint8;
 
 #define MAX_MSG_SIZE(nsym) 255-nsym
 
 namespace RS {
 
-/* @brief Generate an irreducible generator polinomial (necessary to encode a message into Reed-Solomon)
+
+/* @brief Generates an irreducible generator polynomial (necessary to encode a message into Reed-Solomon)
  * @param nsym - desirable lenght of ECC
- * @return generate polynomial
- */
-uint8* generator_poly(int nsym, size_t* size);
+ * @return generate polynomial */
+void generator_poly(int nsym, Poly &generator, PolyHandler &PH);
 
 /* @brief Encode message
- * @param *msg_in - message to encode
- * @param msg_in_size - size of message
- * @param nsym - desirable lenght of ECC
- * @param *msg_out - ptr to encoded message
- * @param *msg_out_size - ptr no encoded message size
- * @return encoded message
- */
-uint8* encode_msg(uint8* msg_in, size_t msg_in_size, int nsym, size_t* msg_out_size);
+ * @param *msg_in      - message to encode
+ * @param msg_in_size  - size of message
+ * @param nsym         - desirable lenght of ECC (must be < 255 - length of msg_in)
+ * @param *msg_out     - ptr where to write encoded message
+ * @param msg_out_size - encoded message size (must be at least msg_in_size + nsym*sizeof(uint8)) */
+void encode_msg(void* msg_in, size_t msg_in_size, void* msg_out, size_t msg_out_size, int nsym);
 
-/* @brief Calculate endoded message syndromes
- * @param *msg - encoded, possibly corrupted message
- * @param msg_size - size of message
- * @param nsym - lenght of ECC
- * @param *synd_size - size of syndromes polynomial
- * @return syndromes polinomial
- */
-uint8* calc_syndromes(uint8* msg, size_t msg_size, uint nsym, size_t* synd_size);
+/* @brief Correct message if needed
+ * @param *msg_in      - message to correct
+ * @param msg_in_size  - size of message
+ * @param *msg_out     - ptr where to write decoded message
+ * @param msg_out_size - encoded message size (must be at least msg_in_size - nsym*sizeof(uint8))
+ * @param nsym         - count of ECC bytes
+ * @param *erase_pos   - positions of erasures (if they were detected by some external algorithm)
+ * @param erase_count  - count of erasures
+ * @return true if decoding was successfull */
+bool correct_msg(void* msg_in, size_t msg_in_size, void* msg_out, size_t msg_out_size, int nsym, uint8* erase_pos, size_t erase_count);
 
+/* a lot of math I really don't understand, but function prototypes are pretty understandable */
 
-/* @TODO: doxygen headers */
+void calc_syndromes(const Poly &msg, uint nsym, Poly &synd);
 
-bool check(uint8* msg, size_t msg_size, int nsym);
+void find_errata_locator(const Poly &epos, Poly &errata_loc, PolyHandler &PH);
 
-uint8* find_errata_locator(uint8* e_pos, size_t e_pos_size, size_t* errloc_size);
+void find_error_evaluator(const Poly &synd, const Poly &errata_loc, int nsym, Poly &err_eval, PolyHandler &PH);
 
-uint8* find_error_evaluator(uint8* synd, size_t synd_size, uint8* err_loc, size_t err_loc_size, int nsym, size_t* err_eval_size);
+void correct_errata(const Poly &synd, const Poly &err_pos, const Poly &msg_in, Poly &corrected, PolyHandler &PH);
 
-uint8* correct_errata(uint8* msg_in, size_t msg_in_size, uint8* synd, size_t synd_size, uint8* err_pos, size_t epos_size, size_t* newsize);
+bool find_error_locator(const Poly &synd, int nsym, Poly &error_loc, PolyHandler &PH, Poly *erase_loc = NULL, size_t erase_count = 0);
 
-uint8* find_error_locator(uint8* synd, size_t synd_size, int nsym, size_t *newsize, uint8* erase_loc = NULL, size_t erase_loc_size = 0, size_t erase_count = 0);
+bool find_errors(const Poly& error_loc, Poly& errors, size_t msg_in_size);
 
-uint8* find_errors(uint8* err_loc, size_t eloc_size, size_t msg_in_size);
-
-uint8* forney_syndromes(uint8* synd, size_t synd_size, size_t msg_in_size);
-
-uint8* correct_msg(uint8* msg_in, size_t msg_in_size, int nsym, uint8* erase_pos = NULL, size_t epos_size = 0);
-
-
+void forney_syndromes(const Poly &synd, const Poly &erasures_pos, Poly &forney_synd, size_t msg_in_size, PolyHandler &PH);
 
 
 namespace test {
-
-template<typename T>
-void print_array(T *array, int count);
 
 void run_tests();
 bool generator_poly_test();

@@ -1,6 +1,7 @@
 #ifndef GF_H
 #define GF_H
 #include <stdlib.h>
+#include "polyhandler.h"
 
 typedef u_int8_t uint8;
 
@@ -22,116 +23,88 @@ void init_tables(int prim = 0x11d);
 /* @brief Addition in Galua Fields
  * @param x - left operand
  * @param y - right operand
- * @return result of addition
- */
+ * @return x + y */
 uint8 add(uint8 x, uint8 y);
 
 /* ##### GF substraction ###### */
 /* @brief Substraction in Galua Fields
  * @param x - left operand
  * @param y - right operand
- * @return result of substraction
- */
+ * @return x - y */
 uint8 sub(uint8 x, uint8 y);
 
-/* @brief Multiplication in Galua Fields without lookup table (slow)
- * @param x - left operand
- * @param y - right operand
+/* DEPRECATED AND SLOW
+ * @brief Multiplication in Galua Fields without lookup table (slow)
+ * @param x    - left operand
+ * @param y    - right operand
  * @param prim - primitive polinominal of GF
- * @return result of multiplication
- */
+ * @return x * y */
 int mult_noLUT(uint8 x, uint8 y, int prim = 0);
 
 /* @brief Multiplication in Galua Fields w/o lookup table, Russian Peasant Multiplication algorithm
- * @param x - left operand
- * @param y - right operand
- * @param prim - primitive polinominal of GF
- * @param field_charac_full -
- * @return result of multiplication
- */
+ * @param x                 - left operand
+ * @param y                 - right operand
+ * @param prim              - primitive polinominal of GF
+ * @param field_charac_full - some mathematical stuff I don't understand
+ * @param carryless         - do carryless multiplication?
+ * @return x * y */
 uint8 mult_noLUT_RPM(int x, int y, int prim = 0, int field_charac_full = 256, bool carryless = true);
 
 /* @brief Multiplication in Galua Fields w/ lookup table (needs to be initialized)
  * @param x - left operand
  * @param y - right operand
- * @return result of multiplication
- */
+ * @return x * y */
 uint8 mul(ushort x, ushort y);
 
 /* @brief Division in Galua Fields w/ lookup table (needs to be initialized)
  * @param x - dividend
  * @param y - divisor
- * @return result of division
- */
+ * @return x / y */
 uint8 div(uint8 x, uint8 y);
 
 /* @brief X in power Y w/ lookup table (needs to be initialized)
- * @param x - operand
+ * @param x     - operand
  * @param power - power
- * @return x^power
- */
+ * @return x^power */
 uint8 pow(uint8 x, int power);
 
 /* @brief Inversion in Galua Fields w/ lookup table (needs to be initialized)
  * @param x - number
- * @return inversion of x
- */
+ * @return inversion of x */
 uint8 inverse(uint8 x);
 
 /* ##########################
  * # POLYNOMIALS OPERATIONS #
  * ########################## */
 
-/* @brief Multiplication polinomial by scalar
- * @param *p - polynomial pointer
- * @param psize - polynomial size
- * @param x - scalar
- * @param *newp - pointer to new polynomial
- * @param *newsize - pointer to new polunomial size
- * @return pointer to new polynomial
- */
-uint8* poly_scale(uint8* p, size_t psize, int x, size_t* newsize);
+/* @brief Multiplication polynomial by scalar
+ * @param &p    - source polynomial
+ * @param &newp - destination polynomial
+ * @param x     - scalar */
+void poly_scale(const Poly &p, Poly &newp, int x);
 
 /* @brief Addition of two polynomials
- * @param *p - polynomial pointer
- * @param psize - len of p array
- * @param *q - second polinomial pointer
- * @param qsize - len of q array
- * @param *newp - pointer to new polinomial
- * @param *newsize - ptr to write new polynomial len
- * @return pointer to new polunomial
- */
-uint8* poly_add(uint8* p, size_t psize, uint8* q, size_t qsize, size_t* newsize);
+ * @param &p    - right operand polynomial
+ * @param &q    - left operand polynomial
+ * @param &newp - destination polynomial */
+void poly_add(const Poly &p, const Poly &q, Poly &newp);
 
 /* @brief Multiplication of two polynomials
- * @param *p - first polynomial pointer
- * @param psize - first polinomial size
- * @param *q - second polinomial pointer
- * @param qsize - second polinomial pointer
- * @param *newp - pointer to new polynomial
- * @param *newsize - pointer to size of new polynomial
- * @return pointer to new polunomial
- */
-uint8* poly_mul(uint8* p, size_t psize, uint8* q, size_t qsize, size_t* newsize);
+ * @param &p    - right operand polynomial
+ * @param &q    - left operand polynomial
+ * @param &newp - destination polynomial */
+void poly_mul(const Poly &p, const Poly &q, Poly &newp);
 
-/* @brief Multiplication of two polynomials
- * @param *p - first polynomial pointer
- * @param psize - first polinomial size
- * @param *q - second polinomial pointer
- * @param qsize - second polinomial pointer
- * @param *newp - pointer to new polynomial
- * @param *newsize - pointer to size of new polynomial
- * @param *sep_pos - pointer to position of separator between data and RS code
- * @return pointer to remainder
- */
-uint8* poly_div(uint8* p, size_t psize, uint8* q, size_t qsize, size_t* newsize);
+/* @brief Division of two polynomials
+ * @param &p    - right operand polynomial
+ * @param &q    - left operand polynomial
+ * @param &newp - destination polynomial */
+void poly_div(const Poly &p, const Poly &q, Poly &newp);
 
 /* @brief Evaluation of polynomial in x
- * @param *p - polynomial pointer
- * @param  x - point where to evaluate
- * @return evaluation
- */
-int poly_eval(uint8* p, size_t psize, int x);
+ * @param &p - polynomial to evaluate
+ * @param x  - evaluation point */
+int poly_eval(const Poly &p, int x);
 
 namespace _inner {
 /* GF multiplication sub-funcs */

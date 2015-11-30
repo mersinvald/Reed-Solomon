@@ -83,71 +83,67 @@ uint8 inverse(uint8 x) {
 
 /* polynomials */
 
-uint8* poly_scale(uint8 *p, size_t psize, int x, size_t* newsize){
-    uint8* newp = new uint8[psize];
-    *newsize = psize;
-    for(uint i = 0; i < psize; i++){
+void poly_scale(const Poly &p, Poly &newp, int x){
+    newp.len = p.len;
+    for(uint i = 0; i < p.len; i++){
         newp[i] = mul(p[i], x);
     }
-    return newp;
 }
 
-uint8* poly_add(uint8 *p, size_t psize, uint8 *q, size_t qsize, size_t* newsize){
-    uint newps = std::max(psize, qsize);
-    uint8* newp = new uint8[newps];
-    memset(newp, 0, newps * sizeof(uint8));
-    for(uint i = 0; i < psize; i++){
-        newp[i + newps - psize] = p[i];
+#define max(a, b) (((a) < (b)) ? (b) : (a))
+
+void poly_add(const Poly &p, const Poly &q, Poly &newp){
+    newp.len = max(p.len, q.len);
+    memset(newp.ptr, 0, newp.len * sizeof(uint8));
+
+    for(uint i = 0; i < p.len; i++){
+        newp[i + newp.len - p.len] = p[i];
     }
-    for(uint i = 0; i < qsize; i++){
-        newp[i + newps - qsize] ^= q[i];
+
+    for(uint i = 0; i < q.len; i++){
+        newp[i + newp.len - q.len] ^= q[i];
     }
-    *newsize = newps;
-    return newp;
 }
 
-uint8* poly_mul(uint8 *p, size_t psize, uint8 *q, size_t qsize, size_t *newsize){
+void poly_mul(const Poly &p, const Poly &q, Poly &newp){
     /* pre-allocate resulting array */
-    uint8* newp = new uint8[psize + qsize - 1];
-    memset(newp, 0, psize * sizeof(uint8));
+    newp.len = p.len + q.len - 1;
+    memset(newp.ptr, 0, newp.len * sizeof(uint8));
     /* Compute the polynomial multiplication (just like the outer product of two vectors,
      * we multiply each coefficients of p with all coefficients of q) */
-    for(uint j = 0; j < qsize; j++){
-        for(uint i = 0; i < psize; i++){
+    for(uint j = 0; j < q.len; j++){
+        for(uint i = 0; i < p.len; i++){
             newp[i+j] ^= mul(p[i], q[j]); /* == r[i + j] = gf_add(r[i+j], gf_mul(p[i], q[j])) */
         }
     }
-    *newsize = psize + qsize - 1;
-    return newp;
 }
 
-uint8* poly_div(uint8 *p, size_t psize, uint8 *q, size_t qsize, size_t *newsize){
-    size_t outsize = psize;
-    uint8* out = new uint8[psize];
-    memcpy(out, p, psize*sizeof(uint8));
+void poly_div(const Poly &p, const Poly &q, Poly &newp){
+    if(p.ptr != newp.ptr)
+        memcpy(newp.ptr, p.ptr, p.len*sizeof(uint8));
+
+    newp.len = p.len;
 
     uint8 coef;
 
-    for(uint i = 0; i < psize-(qsize-1); i++){
-        coef = out[i];
+    for(int i = 0; i < (p.len-(q.len-1)); i++){
+        coef = newp[i];
         if(coef != 0){
-            for(uint j = 1; j < qsize; j++){
+            for(uint j = 1; j < q.len; j++){
                 if(q[j] != 0)
-                    out[i+j] ^= mul(q[j], coef);
+                    newp[i+j] ^= mul(q[j], coef);
             }
         }
     }
 
-    size_t sep = psize-(qsize-1);
-    memmove(out, out+sep, (outsize-sep) * sizeof(uint8));
-    realloc(out, outsize-(outsize+sep));
-    *newsize = (outsize-sep);
-    return out;
+    size_t sep = p.len-(q.len-1);
+    memmove(newp.ptr, newp.ptr+sep, (newp.len-sep) * sizeof(uint8));
+    newp.len = newp.len-sep;
 }
 
-int poly_eval(uint8 *p, size_t psize, int x){
+int poly_eval(const Poly &p, int x){
     uint8 y = p[0];
-    for(uint i = 1; i < psize; i++){
+    for(uint i = 1; i < p.len; i++){
         y = mul(y, x) ^ p[i];
     }
     return y;
