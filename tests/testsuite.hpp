@@ -1,3 +1,8 @@
+/* Author: Mike Lubinets (aka mersinvald)
+ * Date: 29.12.15
+ *
+ * See LICENSE */
+
 #ifndef TESTSUITE_H
 #define TESTSUITE_H
 #include <iostream>

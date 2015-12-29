@@ -1,3 +1,8 @@
+/* Author: Mike Lubinets (aka mersinvald)
+ * Date: 29.12.15
+ *
+ * See LICENSE */
+
 #ifndef GF_H
 #define GF_H
 #include <stdlib.h>

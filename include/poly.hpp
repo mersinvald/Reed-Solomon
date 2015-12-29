@@ -1,3 +1,8 @@
+/* Author: Mike Lubinets (aka mersinvald)
+ * Date: 29.12.15
+ *
+ * See LICENSE */
+
 #ifndef POLY_H
 #define POLY_H
 #include <stdint.h>

@@ -1,3 +1,8 @@
+/* Author: Mike Lubinets (aka mersinvald)
+ * Date: 29.12.15
+ *
+ * See LICENSE */
+
 #include <iostream>
 #include "rs.hpp"
 using namespace std;

@@ -1,3 +1,8 @@
+/* Author: Mike Lubinets (aka mersinvald)
+ * Date: 29.12.15
+ *
+ * See LICENSE */
+
 #ifndef GFTEST_H
 #define GFTEST_H
 #include "testsuite.hpp"
