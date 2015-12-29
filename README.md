@@ -41,3 +41,8 @@ Simple example: <br>
 
     std::cout << ((memcmp(message, repaired, msglen) == 0) ? "SUCCESS" : "FAILURE") << std::endl;
 ```
+
+## Regards
+
+Huge thanks to authors of wikiversity
+https://en.wikiversity.org/wiki/Reed–Solomon_codes_for_coders
