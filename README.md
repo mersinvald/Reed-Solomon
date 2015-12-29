@@ -15,7 +15,7 @@ Also qtcreator .pro files are present.
 
 Template class ReedSolomon has two template arguements: message length and ecc length. <br>
 Simple example: <br>
-<code>
+```
     char message[] = "Some very important message ought to be delivered";
     const int msglen = sizeof(message);
     const int ecclen = 8;
@@ -40,4 +40,4 @@ Simple example: <br>
     std::cout << "Repaired:  " << repaired << std::endl;
 
     std::cout << ((memcmp(message, repaired, msglen) == 0) ? "SUCCESS" : "FAILURE") << std::endl;
-</code>
+```
