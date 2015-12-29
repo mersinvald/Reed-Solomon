@@ -13,7 +13,7 @@ Also qtcreator .pro files are present.
 
 ## Usage
 
-Template class ReedSolomon has two template arguements: message length and ecc length. <br>
+Template class ReedSolomon accepts two template arguements: message length and ecc length. <br>
 Simple example: <br>
 ```
     char message[] = "Some very important message ought to be delivered";
