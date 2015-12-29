@@ -44,5 +44,5 @@ Simple example: <br>
 
 ## Regards
 
-Huge thanks to authors of wikiversity
+Huge thanks to authors of wikiversity <br>
 https://en.wikiversity.org/wiki/Reed–Solomon_codes_for_coders
