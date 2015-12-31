@@ -1,5 +1,5 @@
 # Reed-Solomon
-Reed Solomon BCH encoder and decoder
+Reed Solomon BCH encoder and decoder library
 
 ## Overview
 
@@ -12,6 +12,9 @@ To build the library simply run <b>mkdir -p build/obj && make</b> in the folder 
 Also qtcreator .pro files are present.
 
 ## Usage
+
+All the Reed-Solomon code is in folder **include**, you need to just include header files, GF ariphmetics is separated in both .hpp and .cpp, so it have to be included in your project too.
+Also, **make** will build the static library with GF ariphmetics functions.
 
 Template class ReedSolomon accepts two template arguements: message length and ecc length. <br>
 Simple example: <br>
