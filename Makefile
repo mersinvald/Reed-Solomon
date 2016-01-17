@@ -1,7 +1,7 @@
 all: libRS RStest example
 
 libRS:
-	cd src && make
+	mkdir build/obj -p && cd src && make
 
 RStest:
 	cd tests && make

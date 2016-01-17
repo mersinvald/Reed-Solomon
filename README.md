@@ -8,7 +8,7 @@ If somebody want to reimplement memory management with heap usege, pull requests
 
 ## Build
 
-To build the library simply run <b>mkdir -p build/obj && make</b> in the folder with cloned repo<br>
+To build the library simply run <b>make</b> in the folder with cloned repo<br>
 Also qtcreator .pro files are present.
 
 ## Usage
