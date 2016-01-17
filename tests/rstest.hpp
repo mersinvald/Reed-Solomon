@@ -11,9 +11,7 @@
 class RStest : public TestSuite
 {
 public:
-    RStest() {}
-
-    bool run_tests();
+    static Report run_tests();
 
     static bool test_encode(std::string& name);
     static bool test_decode(std::string& name);

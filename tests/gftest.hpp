@@ -10,9 +10,7 @@
 
 class GFtest : public TestSuite {
 public:
-    GFtest() {}
-
-    bool run_tests();
+    static Report run_tests();
 
     static bool test_add(std::string& name);
     static bool test_sub(std::string& name);

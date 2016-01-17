@@ -6,7 +6,7 @@
 #include "rstest.hpp"
 #include <rs.hpp>
 
-bool
+Report
 RStest::run_tests() {
     bool (*tests[])(std::string&) = {
         test_encode,
@@ -14,15 +14,20 @@ RStest::run_tests() {
         test_stress
     };
 
-    for(uint i = 0; i < 3; i++) {
-        if(!test(tests[i])) return false;
+    Report rep = {3, 0};
+
+    for(uint i = 0; i < rep.overall; i++) {
+        if(test(tests[i])) rep.passed++;
     }
-    return true;
+
+    std::cout << "RSTest: " << rep.passed << "/" << rep.overall << " tests passed.\n\n";
+
+    return rep;
 }
 
 bool
 RStest::test_encode(std::string &name) {
-    name = "RS::Encode";
+    INIT_TESTCASE;
     RS::ReedSolomon<30, 8> rs;
 
     char message[30];
@@ -33,40 +38,50 @@ RStest::test_encode(std::string &name) {
         99, 26, 219, 193, 9, 94, 186, 143
     };
 
-    for(uint i = 0; i < 30; i++){
-        message[i] = i;
-    }
+    memcpy(message, right, 30);
 
     rs.Encode(message, encoded);
 
-    return compare((uint8*)encoded, (uint8*)right, 38, 38);
+    SUBTEST(compare((uint8*)encoded, (uint8*)right, 38));
+    RETURN;
 }
 
 bool
 RStest::test_decode(std::string &name) {
-    name = "RS::Decode";
+    INIT_TESTCASE;
     RS::ReedSolomon<30, 8> rs;
-    uint8 encoded[38] = {
-        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
-        99, 26, 219, 193, 9, 94, 186, 143
-    };
 
+    char message[30];
     char right[30] = {
         0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29
     };
 
-    char message[30];
+    // Test clean message
+    uint8 clean[38] = {
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
+        99, 26, 219, 193, 9, 94, 186, 143
+    };
+    SUBTEST(rs.Decode(clean, message) == RESULT_SUCCESS);
+    SUBTEST(compare(message, right, 30));
 
-    rs.Decode(encoded, message);
+    // Test corrupted message
+    uint8 corrupted[38] = {
+        0, 1, 2, 3, 4, 5, 6, 7, 0, 9, 10, 11, 12, 13, 14, 0, 16, 17, 18, 19, 0, 21, 22, 23, 24, 25, 26, 27, 28, 29,
+        99, 26, 219, 193, 9, 94, 0, 143
+    };
 
-    return compare(message, right, 30, 30);
+    SUBTEST(rs.Decode(corrupted, message) == RESULT_SUCCESS);
+    SUBTEST(compare(message, right, 30));
+
+    RETURN
 }
 
 // TODO make complex encoder-decder test
 
 bool
 RStest::test_stress(std::string &name) {
-    name = "Complex";
-    return true;
+    INIT_TESTCASE;
+
+    RETURN;
 }
 

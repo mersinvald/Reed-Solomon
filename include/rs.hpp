@@ -10,7 +10,7 @@
 #include "poly.hpp"
 #include "gf.hpp"
 
-enum RESULT {
+enum Result {
     RESULT_SUCCESS,
     RESULT_ERROR
 };

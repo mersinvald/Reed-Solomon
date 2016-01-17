@@ -5,7 +5,7 @@
 
 #include "gftest.hpp"
 
-bool
+Report
 GFtest::run_tests() {
     bool (*tests[])(std::string&) = {
         test_add,
@@ -20,15 +20,20 @@ GFtest::run_tests() {
         test_poly_eval
     };
 
-    for(uint i = 0; i < 10; i++) {
-        if(!test(tests[i])) return false;
+    Report rep = {10, 0};
+
+    for(uint i = 0; i < rep.overall; i++) {
+        if(test(tests[i])) rep.passed++;
     }
-    return true;
+
+    std::cout << "GFTest: " << rep.passed << "/" << rep.overall << " tests passed.\n\n";
+
+    return rep;
 }
 
 bool
 GFtest::test_add(std::string &name) {
-    name = "RS::gf::add";
+    INIT_TESTCASE;
 
     const uint testcount = 256;
     uint8* leftops  = (uint8*) RS::gf::log;
@@ -47,63 +52,73 @@ GFtest::test_add(std::string &name) {
     };
 
     for(uint i = 0; i < testcount; i++) {
-        if(!compare(RS::gf::add(leftops[i], rightops[i]), answers[i])) return false;
+        SUBTEST(compare(RS::gf::add(leftops[i], rightops[i]), answers[i]));
     }
-    return true;
+
+    RETURN;
 }
 
 // TODO Implement other tests
 
 bool
 GFtest::test_mul(std::string &name) {
-    name = "RS::gf::mul";
-    return true;
+    INIT_TESTCASE;
+
+    RETURN;
 }
 
 bool
 GFtest::test_div(std::string &name) {
-    name = "RS::gf::div";
-    return true;
+    INIT_TESTCASE;
+
+    RETURN;
 }
 
 bool
 GFtest::test_pow(std::string &name) {
-    name = "RS::gf::pow";
-    return true;
+    INIT_TESTCASE;
+
+    RETURN;
 }
 
 bool
 GFtest::test_inverse(std::string &name) {
-    name = "RS::gf::inverse";
-    return true;
+    INIT_TESTCASE;
+
+    RETURN;
 }
 
 bool
-GFtest::test_poly_scale(std::string &name) {
-    name = "RS::gf::poly_scale";
-    return true;
+GFtest::test_poly_scale(std::string &name) {    
+    INIT_TESTCASE;
+
+    RETURN;
 }
 
 bool
 GFtest::test_poly_add(std::string &name) {
-    name = "RS::gf::poly_add";
-    return true;
+    INIT_TESTCASE;
+
+    RETURN;
 }
 
 bool
 GFtest::test_poly_mul(std::string &name) {
-    name = "RS::gf::poly_mul";
-    return true;
+    INIT_TESTCASE;
+
+    RETURN;
 }
 
 bool
 GFtest::test_poly_div(std::string &name) {
-    name = "RS::gf::poly_div";
-    return true;
+    INIT_TESTCASE;
+
+    RETURN;
 }
 
 bool
 GFtest::test_poly_eval(std::string &name) {
-    name = "RS::gf::poly_eval";
-    return true;
+    INIT_TESTCASE;
+
+    RETURN;
 }
