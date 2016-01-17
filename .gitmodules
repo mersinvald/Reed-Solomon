@@ -1,0 +1,3 @@
+[submodule "tests/mtest"]
+	path = tests/mtest
+	url = git@github.com:mersinvald/mtest.git
