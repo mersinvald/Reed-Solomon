@@ -8,9 +8,6 @@
 #include <stdlib.h>
 #include "poly.hpp"
 
-typedef uint8_t uint8;
-typedef unsigned short ushort;
-
 namespace RS {
 
 namespace gf {
@@ -82,7 +79,7 @@ const uint8_t log[256] = {
  * @param x - left operand
  * @param y - right operand
  * @return x + y */
-inline uint8 add(uint8 x, uint8 y) {
+inline uint8_t add(uint8_t x, uint8_t y) {
     return x^y;
 }
 
@@ -91,7 +88,7 @@ inline uint8 add(uint8 x, uint8 y) {
  * @param x - left operand
  * @param y - right operand
  * @return x - y */
-inline uint8 sub(uint8 x, uint8 y) {
+inline uint8_t sub(uint8_t x, uint8_t y) {
     return x^y;
 }
 
@@ -99,7 +96,7 @@ inline uint8 sub(uint8 x, uint8 y) {
  * @param x - left operand
  * @param y - rifht operand
  * @return x * y */
-inline uint8 mul(ushort x, ushort y){
+inline uint8_t mul(uint16_t x, uint16_t y){
     if (x == 0 || y == 0)
         return 0;
     return exp[log[x] + log[y]];
@@ -109,7 +106,7 @@ inline uint8 mul(ushort x, ushort y){
  * @param x - dividend
  * @param y - divisor
  * @return x / y */
-inline uint8 div(uint8 x, uint8 y){
+inline uint8_t div(uint8_t x, uint8_t y){
     #ifdef DEBUG
     assert(y != 0);
     #endif
@@ -121,8 +118,8 @@ inline uint8 div(uint8 x, uint8 y){
  * @param x     - operand
  * @param power - power
  * @return x^power */
-inline uint8 pow(uint8 x, int power){
-    int i = log[x];
+inline uint8_t pow(uint8_t x, intmax_t power){
+    intmax_t i = log[x];
     i *= power;
     i %= 255;
     if(i < 0) i = i + 255;
@@ -132,7 +129,7 @@ inline uint8 pow(uint8 x, int power){
 /* @brief Inversion in Galua Fields
  * @param x - number
  * @return inversion of x */
-inline uint8 inverse(uint8 x){
+inline uint8_t inverse(uint8_t x){
     return exp[255 - log[x]]; /* == div(1, x); */
 }
 
@@ -144,7 +141,7 @@ inline uint8 inverse(uint8 x){
  * @param &p    - source polynomial
  * @param &newp - destination polynomial
  * @param x     - scalar */
-void poly_scale(const Poly &p, Poly &newp, int x);
+void poly_scale(const Poly &p, Poly &newp, uint16_t x);
 
 /* @brief Addition of two polynomials
  * @param &p    - right operand polynomial
@@ -167,7 +164,7 @@ void poly_div(const Poly &p, const Poly &q, Poly &newp);
 /* @brief Evaluation of polynomial in x
  * @param &p - polynomial to evaluate
  * @param x  - evaluation point */
-int poly_eval(const Poly &p, int x);
+int8_t poly_eval(const Poly &p, uint16_t x);
 
 } /* end of gf namespace */
 

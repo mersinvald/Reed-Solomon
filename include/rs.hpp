@@ -17,95 +17,90 @@ enum Result {
 
 namespace RS {
 
-typedef uint8_t  uint8;
-typedef unsigned uint;
+#define MSG_CNT 3   // message-length polynomials count
+#define POLY_CNT 14 // (ecc_length*2)-length polynomialc count
 
-#define MSG_CNT 3   // необходимое количество полиномов длиной в сообщение
-#define POLY_CNT 14 // необходимое количество полиномов длиной в ecc_length * 2
-
-template <const uint8 msg_length,  // Длина сообщения без кода коррекции
-          const uint8 ecc_length>  // Длина кода коррекции
+template <const uint8_t msg_length,  // Message length without correction code
+          const uint8_t ecc_length>  // Length of correction code
 
 class ReedSolomon {
 public:
     ReedSolomon() {
-        const uint8 enc_len  = msg_length + ecc_length;
-        const uint8 poly_len = ecc_length * 2;
-        uint  offset = 0;
+        const    uint8_t   enc_len  = msg_length + ecc_length;
+        const    uint8_t   poly_len = ecc_length * 2;
+        const    uintptr_t memptr   = (uintptr_t) &memory;
+        register uint16_t  offset   = 0;
 
-        /* Заполняем первые 6 вручную, так как расположение зависит от шаблона:
-         * Кодеру не требуются ID_MSG_E и далее, а он длиной в целое сообщение,
-         * тогда как T_POLY имеют длину nsy,*2 */
+        /* Initialize first six polys manually cause their amount depends on template parameters */
 
-        polynoms[0].Init(ID_MSG_IN, offset, enc_len, &memory);
+        polynoms[0].Init(ID_MSG_IN, offset, enc_len, memptr);
         offset += enc_len;
 
-        polynoms[1].Init(ID_MSG_OUT, offset, enc_len, &memory);
+        polynoms[1].Init(ID_MSG_OUT, offset, enc_len, memptr);
         offset += enc_len;
 
-        for(uint i = ID_GENERATOR; i < ID_MSG_E; i++) {
-            polynoms[i].Init(i, offset, poly_len, &memory);
+        for(uint8_t i = ID_GENERATOR; i < ID_MSG_E; i++) {
+            polynoms[i].Init(i, offset, poly_len, memptr);
             offset += poly_len;
         }
 
-        polynoms[5].Init(ID_MSG_E, offset, enc_len, &memory);
+        polynoms[5].Init(ID_MSG_E, offset, enc_len, memptr);
         offset += enc_len;
 
-        for(uint i = ID_TPOLY3; i < ID_ERR_EVAL+1; i++) {
-            polynoms[i].Init(i, offset, poly_len, &memory);
+        for(uint8_t i = ID_TPOLY3; i < ID_ERR_EVAL+1; i++) {
+            polynoms[i].Init(i, offset, poly_len, memptr);
             offset += poly_len;
         }
     }
 
     ~ReedSolomon() {
-        // Декструктор-пустышка, без него компилятор пытается освободить память на стеке через delete
+        // Dummy destructor, gcc-generated one crashes programm
         memory = NULL;
     }
 
-    /* @brief Кодирование сообщения
-     * @param *src - указатель на исходное сообщение             (размером msg_lenth)
-     * @param *dst - буффер для записи закодированного сообщения (размером >= msg_length + ecc_length */
+    /* @brief Message encoding
+     * @param *src - input message buffer      (msg_lenth size)
+     * @param *dst - output buffer             (msg_length + ecc_length size at least) */
     void Encode(void* src, void* dst) {
         #ifdef DEBUG
         assert(msg_length + ecc_length < 256);
         #endif
 
-        /* Статический массив для кэширования генератора */
-        static uint8 generator[ecc_length+1] = {0};
-        static bool generator_cached = false;
+        /* Generator cache, it dosn't change for one template parameters */
+        static uint8_t generator_cache[ecc_length+1] = {0};
+        static bool    generator_cached = false;
 
-        /* Выделяем на стеке паямять для полиномов */
-        uint8 stack_memory[MSG_CNT * msg_length + POLY_CNT * ecc_length * 2];
+        /* Allocating memory on stack for polynomials storage */
+        uint8_t stack_memory[MSG_CNT * msg_length + POLY_CNT * ecc_length * 2];
         this->memory = stack_memory;
 
-        uint8 *src_ptr = (uint8*) src;
-        uint8 *dst_ptr = (uint8*) dst;
+        uint8_t* src_ptr = (uint8_t*) src;
+        uint8_t* dst_ptr = (uint8_t*) dst;
 
         Poly &msg_in  = polynoms[ID_MSG_IN];
         Poly &msg_out = polynoms[ID_MSG_OUT];
         Poly &gen     = polynoms[ID_GENERATOR];
 
-        // Зануляем полиномы (зачем занулять msg_in я мозгом так и не допёр, но без этого не работает)
-        // Одним словом, weird shit
+        // Weird shit, but without reseting msg_in it simply doesn't work
         msg_in.Reset();
         msg_out.Reset();
 
-        // Используем кэшированный генератор или генерируем новый
+        // Using cached generator or generating new one
         if(generator_cached) {
-            gen.Set(generator, sizeof(generator));
+            gen.Set(generator_cache, sizeof(generator_cache));
         } else {
             GeneratorPoly();
-            memcpy(generator, gen.ptr(), gen.length);
+            memcpy(generator_cache, gen.ptr(), gen.length);
             generator_cached = true;
         }
 
-        // Копируем сообщение в полиномы
+        // Copying input message to internal polynomial
         msg_in.Set(src_ptr, msg_length);
         msg_out = msg_in;
         msg_out.length = msg_in.length + ecc_length;
 
-        // Тут происходит магия кодирования
-        uint8 coef; // кэш
+        // Here all the magic happens
+        uint8_t coef; // cache
         for(uint i = 0; i < msg_length; i++){
             coef = msg_out[i];
             if(coef != 0){
@@ -115,53 +110,53 @@ public:
             }
         }
 
-        // Копируем сообщение
-        memcpy(dst_ptr, src_ptr, msg_length * sizeof(uint8));
+        // Copying message to the output buffer
+        memcpy(dst_ptr, src_ptr, msg_length * sizeof(uint8_t));
 
-        // Копируем ECC
-        memcpy(dst_ptr+msg_length, msg_out.ptr()+msg_length, ecc_length * sizeof(uint8));
+        // Copying ECC to the output buffer
+        memcpy(dst_ptr+msg_length, msg_out.ptr()+msg_length, ecc_length * sizeof(uint8_t));
     }
 
-    /* @brief Декодирование сообщения
-     * @param *msg_in      - указатель на закодированное сообщение       (размером msg_length + ecc_length)
-     * @param *msg_out     - буффер для записи декодированного сообщения (размером >= msg_length)
-     * @param *erase_pos   - позиции байтов, содержащих ошибки           (если известны)
-     * @param erase_count  - количество байтов, содержащих ошибки
-     * @return RESULT_SUCCESS при успешном завершении, иначе код ошибки */
-     int Decode(void* src, void* dst, uint8* erase_pos = nullptr, size_t erase_count = 0) {
+    /* @brief Message decoding
+     * @param *msg_in      - encoded message buffer   (msg_length + ecc_length size)
+     * @param *msg_out     - output buffer            (msg_length size at least)
+     * @param *erase_pos   - known errors positions
+     * @param erase_count  - count of known errors
+     * @return RESULT_SUCCESS if successfull, error code otherwise */
+     int Decode(void* src, void* dst, uint8_t* erase_pos = nullptr, size_t erase_count = 0) {
         #ifdef DEBUG
         assert(msg_length + ecc_length < 256);
         #endif
 
-        uint8 *src_ptr = (uint8*) src;
-        uint8 *dst_ptr = (uint8*) dst;
+        uint8_t *src_ptr = (uint8_t*) src;
+        uint8_t *dst_ptr = (uint8_t*) dst;
 
-        const uint src_len = msg_length + ecc_length;
-        const uint dst_len = msg_length;
+        const uint8_t src_len = msg_length + ecc_length;
+        const uint8_t dst_len = msg_length;
 
-        /* Выделяем на стеке паямять для полиномов */
-        uint8 stack_memory[MSG_CNT * msg_length + POLY_CNT * ecc_length * 2];
+        /* Allocation memory on stack */
+        uint8_t stack_memory[MSG_CNT * msg_length + POLY_CNT * ecc_length * 2];
         this->memory = stack_memory;
 
         Poly &msg_in  = polynoms[ID_MSG_IN];
         Poly &msg_out = polynoms[ID_MSG_OUT];
         Poly &epos    = polynoms[ID_ERASURES];
 
-        // Копируем сообщение в полиномы
+        // Copying message to polynomials memory
         msg_in.Set(src_ptr, src_len);
         msg_out = msg_in;
 
-        // Записываем известные ошибки в полином, если они были переданы
+        // Copying known errors to polynomial
         if(erase_pos == NULL) {
             epos.length = 0;
         } else {
             epos.Set(erase_pos, erase_count);
-            for(uint i = 0; i < epos.length; i++){
+            for(uint8_t i = 0; i < epos.length; i++){
                 msg_in[epos[i]] = 0;
             }
         }
 
-        // Известных ошибок больше, чем может быть исправлено
+        // Too many errors
         if(epos.length > ecc_length) return RESULT_ERROR;
 
         Poly &synd   = polynoms[ID_SYNDROMES];
@@ -170,48 +165,49 @@ public:
         Poly &err    = polynoms[ID_ERRORS];
         Poly &forney = polynoms[ID_FORNEY];
 
-        // Вычисляем синдромы полинома
+        // Calculating syndrome
         CalcSyndromes(msg_in);
 
-        // Проверяем, есть ли ошибки
+        // Checking for errors
         bool has_errors = false;
-        for(uint i = 0; i < synd.length; i++) {
+        for(uint8_t i = 0; i < synd.length; i++) {
             if(synd[i] != 0) {
                 has_errors = true;
                 break;
             }
         }
 
-        // Записываем сообщение и выходим, если нет ошибок
+        // Going to exit if no errors
         if(!has_errors) goto return_corrected_msg;
 
         CalcForneySyndromes(synd, epos, src_len);
         FindErrorLocator(forney, NULL, epos.length);
 
-        // Разворачиваем синдром
-        // TODO оптимизировать разворот через инверсию индексов
+        // Reversing syndrome
+        // TODO optimize through special Poly flag
         reloc.length = eloc.length;
-        for(int i = eloc.length-1, j = 0; i >= 0; i--, j++){
+        for(int8_t i = eloc.length-1, j = 0; i >= 0; i--, j++){
             reloc[j] = eloc[i];
         }
 
-        // Вычисляем позиции ошибок
+        // Fing errors
         FindErrors(reloc, src_len);
 
-        // Произошла ошибка при поиске ошибок (so helpfull :D)
+        // Error happened while finding errors (so helpfull :D)
         if(err.length == 0) return RESULT_ERROR;
 
-        /* Складываем найденные ошибки с уже известными */
-        for(uint i = 0; i < err.length; i++) {
+        /* Adding found errors with known */
+        for(uint8_t i = 0; i < err.length; i++) {
             epos.Append(err[i]);
         }
 
-        // Исправляем
+        // Correcting errors
         CorrectErrata(synd, epos, msg_in);
 
     return_corrected_msg:
+        // Wrighting corrected message to output buffer
         msg_out.length = dst_len;
-        memcpy(dst_ptr, msg_out.ptr(), msg_out.length * sizeof(uint8));
+        memcpy(dst_ptr, msg_out.ptr(), msg_out.length * sizeof(uint8_t));
         return RESULT_SUCCESS;
     }
 
@@ -244,8 +240,8 @@ private:
         ID_ERR_EVAL,
     };
 
-    // Указатель на массив на стеке вызванного метода
-    uint8* memory;
+    // Pointer for polynomials memory on stack
+    uint8_t* memory;
     Poly polynoms[MSG_CNT + POLY_CNT];
 
     #ifdef DEBUG
@@ -262,7 +258,7 @@ private:
         Poly &temp = polynoms[ID_TPOLY2];
         mulp.length = 2;
 
-        for(int i = 0; i < ecc_length; i++){
+        for(int8_t i = 0; i < ecc_length; i++){
             mulp[0] = 1;
             mulp[1] = gf::pow(2, i);
 
@@ -276,7 +272,7 @@ private:
         Poly &synd = polynoms[ID_SYNDROMES];
         synd.length = ecc_length+1;
         synd[0] = 0;
-        for(uint i = 1; i < ecc_length+1; i++){
+        for(uint8_t i = 1; i < ecc_length+1; i++){
             synd[i] = gf::poly_eval(msg, gf::pow(2, i-1));
         }
     }
@@ -294,7 +290,7 @@ private:
         mulp.length = 1;
         addp.length = 2;
 
-        for(uint i = 0; i < epos.length; i++){
+        for(uint8_t i = 0; i < epos.length; i++){
             mulp[0] = 1;
             addp[0] = gf::pow(2, epos[i]);
             addp[1] = 0;
@@ -306,7 +302,7 @@ private:
         }
     }
 
-    void FindErrorEvaluator(const Poly &synd, const Poly &errata_loc, Poly &dst, uint8 ecclen) {
+    void FindErrorEvaluator(const Poly &synd, const Poly &errata_loc, Poly &dst, uint8_t ecclen) {
         Poly &mulp = polynoms[ID_TPOLY1];
         gf::poly_mul(synd, errata_loc, mulp);
 
@@ -324,18 +320,18 @@ private:
         Poly &corrected = polynoms[ID_MSG_OUT];
         c_pos.length = err_pos.length;
 
-        for(uint i = 0; i < err_pos.length; i++)
+        for(uint8_t i = 0; i < err_pos.length; i++)
             c_pos[i] = msg_in.length - 1 - err_pos[i];
 
-        /* использует t_poly 1, 2, 3, 4 */
+        /* uses t_poly 1, 2, 3, 4 */
         FindErrataLocator(c_pos);
         Poly &errata_loc = polynoms[ID_ERASURES_LOC];
 
-        /* разворачиваем синдромы */
+        /* reversing syndromes */
         Poly &rsynd = polynoms[ID_TPOLY3];
         rsynd.length = synd.length;
 
-        for(int i = synd.length-1, j = 0; i >= 0; i--, j++) {
+        for(int8_t i = synd.length-1, j = 0; i >= 0; i--, j++) {
             rsynd[j] = synd[i];
         }
 
@@ -348,7 +344,7 @@ private:
         /* reversing it back */
         Poly &e_eval = polynoms[ID_ERR_EVAL];
         e_eval.length = re_eval.length;
-        for(int i = re_eval.length-1, j = 0; i >= 0; i--, j++)
+        for(int8_t i = re_eval.length-1, j = 0; i >= 0; i--, j++)
             e_eval[j] = re_eval[i];
 
 
@@ -356,35 +352,36 @@ private:
         X.length = 0;
 
         int16_t l;
-        for(uint i = 0; i < c_pos.length; i++){
+        for(uint8_t i = 0; i < c_pos.length; i++){
             l = 255 - c_pos[i];
             X.Append(gf::pow(2, -l));
         }
 
-        /* Magnitude polynomial */
+        /* Magnitude polynomial
+        /* Shit just got real */
         Poly &E = polynoms[ID_MSG_E];
         E.Reset();
         E.length = msg_in.length;
 
-        uint8 Xi_inv;
+        uint8_t Xi_inv;
 
         Poly &err_loc_prime_temp = polynoms[ID_TPOLY2];
 
-        uint8 err_loc_prime;
-        uint8 y;
+        uint8_t err_loc_prime;
+        uint8_t y;
 
-        for(uint i = 0; i < X.length; i++){
+        for(uint8_t i = 0; i < X.length; i++){
             Xi_inv = gf::inverse(X[i]);
 
             err_loc_prime_temp.length = 0;
-            for(uint j = 0; j < X.length; j++){
+            for(uint8_t j = 0; j < X.length; j++){
                 if(j != i){
                     err_loc_prime_temp.Append(gf::sub(1, gf::mul(Xi_inv, X[j])));
                 }
             }
 
             err_loc_prime = 1;
-            for(uint j = 0; j < err_loc_prime_temp.length; j++){
+            for(uint8_t j = 0; j < err_loc_prime_temp.length; j++){
                 err_loc_prime = gf::mul(err_loc_prime, err_loc_prime_temp[j]);
             }
 
@@ -401,7 +398,7 @@ private:
         Poly &error_loc = polynoms[ID_ERRORS_LOC];
         Poly &err_loc = polynoms[ID_TPOLY1];
         Poly &old_loc = polynoms[ID_TPOLY2];
-        // По какой-то причине эта ссылка выкидывается коипилятором, так что копируем структуру.
+        // For some magical reason this referens getting optimized out by compiler, so copy by value
         Poly temp    = polynoms[ID_TPOLY3];
         Poly &temp2   = polynoms[ID_TPOLY4];
 
@@ -415,22 +412,22 @@ private:
             old_loc[0] = 1;
         }
 
-        uint synd_shift = 0;
+        uint8_t synd_shift = 0;
         if(synd.length > ecc_length)
             synd_shift = synd.length - ecc_length;
 
-        uint8 K = 0;
-        uint8 delta = 0;
-        uint8 index;
+        uint8_t K = 0;
+        uint8_t delta = 0;
+        uint8_t index;
 
-        for(uint i = 0; i < ecc_length - erase_count; i++){
+        for(int8_t i = 0; i < ecc_length - erase_count; i++){
             if(erase_loc != NULL)
                 K = erase_count + i + synd_shift;
             else
                 K = i + synd_shift;
 
             delta = synd[K];
-            for(uint j = 1; j < err_loc.length; j++) {
+            for(uint8_t j = 1; j < err_loc.length; j++) {
                 index = err_loc.length - j - 1;
                 delta ^= gf::mul(err_loc[index], synd[K-j]);
             }
@@ -454,10 +451,10 @@ private:
 
         uint errs = err_loc.length - shift - 1;
         if(((errs - erase_count) * 2 + erase_count) > ecc_length){
-            return false; /* количество ошибок больше, чем может быть исправлено! */
+            return false; /* Error count is greater then we can fix! */
         }
 
-        memcpy(error_loc.ptr(), err_loc.ptr() + shift, (err_loc.length - shift) * sizeof(uint8));
+        memcpy(error_loc.ptr(), err_loc.ptr() + shift, (err_loc.length - shift) * sizeof(uint8_t));
         error_loc.length = (err_loc.length - shift);
         return true;
     }
@@ -465,10 +462,10 @@ private:
     bool FindErrors(const Poly& error_loc, size_t msg_in_size) {
         Poly &err = polynoms[ID_ERRORS];
 
-        uint8 errs = error_loc.length - 1;
+        uint8_t errs = error_loc.length - 1;
         err.length = 0;
 
-        for(uint i = 0; i < msg_in_size; i++) {
+        for(uint8_t i = 0; i < msg_in_size; i++) {
             if(gf::poly_eval(error_loc, gf::pow(2, i)) == 0) {
                 err.Append(msg_in_size - 1 - i);
             }
@@ -490,17 +487,17 @@ private:
         Poly &forney_synd = polynoms[ID_FORNEY];
         erase_pos_reversed.length = 0;
 
-        for(uint i = 0; i < erasures_pos.length; i++){
+        for(uint8_t i = 0; i < erasures_pos.length; i++){
             erase_pos_reversed.Append(msg_in_size - 1 - erasures_pos[i]);
         }
 
         forney_synd.Reset();
         forney_synd.Set(synd.ptr()+1, synd.length-1);
 
-        uint8 x;
-        for(uint i = 0; i < erasures_pos.length; i++) {
+        uint8_t x;
+        for(uint8_t i = 0; i < erasures_pos.length; i++) {
             x = gf::pow(2, erase_pos_reversed[i]);
-            for(int j = 0; j < forney_synd.length - 1; j++){
+            for(int8_t j = 0; j < forney_synd.length - 1; j++){
                 forney_synd[j] = gf::mul(forney_synd[j], x) ^ forney_synd[j+1];
             }
         }

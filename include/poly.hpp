@@ -14,8 +14,6 @@
 
 namespace RS {
 
-typedef uint8_t  uint8;
-typedef uint32_t uint;
  
 #ifdef __CC_ARM
 #define nullptr NULL
@@ -23,15 +21,15 @@ typedef uint32_t uint;
     
 struct Poly {
     Poly()
-        : length(0), memory(nullptr) {}
+        : length(0), _memory(nullptr) {}
 
-    Poly(uint8 id, uint offset, uint8 size) \
-        : length(0), _id(id), _size(size), _offset(offset), memory(nullptr) {}
+    Poly(uint8_t id, uint16_t offset, uint8_t size) \
+        : length(0), _id(id), _size(size), _offset(offset), _memory(nullptr) {}
 
     /* @brief Append number at the end of polynomial
      * @param num - number to append
      * @return false if polynomial can't be stretched */
-    inline bool Append(uint8 num) {
+    inline bool Append(uint8_t num) {
         #ifdef DEBUG
         assert(length+1 < _size);
         #endif
@@ -39,29 +37,29 @@ struct Poly {
         return true;
     }
 
-    /* @brief Инициализация значений полинома */
-    inline void Init(uint8 id, uint offset, uint8 size, uint8** memory) {
+    /* @brief Polynomial initialization */
+    inline void Init(uint8_t id, uint16_t offset, uint8_t size, uintptr_t memory_ptr) {
         this->_id     = id;
         this->_offset = offset;
         this->_size   = size;
         this->length  = 0;
-        this->memory  = memory;
+        this->_memory  = (uint8_t**) memory_ptr;
     }
 
-    /* @brief Обнуление памяти полинома */
+    /* @brief Polynomial memory zeroing */
     inline void Reset() {
         memset(ptr(), 0, this->_size);
     }
 
-    /* @brief Скопировать в массив полинома из внешнего буффера
-     * @param src    - указатель на источник
-     * @param size   - размер источника
-     * @param offset - смещение в памяти полинома */
-    inline void Set(uint8* src, uint8 len, uint offset = 0) {
+    /* @brief Copy polynomial to memory
+     * @param src    - source byte-sequence
+     * @param size   - size of polynomial
+     * @param offset - write offset */
+    inline void Set(uint8_t* src, uint8_t len, uint16_t offset = 0) {
         #ifdef DEBUG
         assert(src && _size <= this->_size-offset);
         #endif
-        memcpy(ptr()+offset, src, len * sizeof(uint8));
+        memcpy(ptr()+offset, src, len * sizeof(uint8_t));
         length = len;
     }
 
@@ -80,38 +78,37 @@ struct Poly {
         Set(b.ptr(), length);
     }
 
-    inline uint8& operator[] (uint8 i) const {
+    inline uint8_t& operator[] (uint8_t i) const {
         #ifdef DEBUG
         assert(i < _size);
         #endif
         return ptr()[i];
     }
 
-    inline uint8 id() const {
+    inline uint8_t id() const {
         return _id;
     }
 
-    inline uint8 size() const {
+    inline uint8_t size() const {
         return _size;
     }
 
-    // Указатель на область памяти на стеке
-    inline uint8* ptr() const {
+    // Returns pointer to memory of this polynomial
+    inline uint8_t* ptr() const {
         #ifdef DEBUG
-        assert(memory && *memory);
+        assert(_memory && *_memory);
         #endif
-        return (*memory) + _offset;
+        return (*_memory) + _offset;
     }
 
-    uint8 length;
+    uint8_t length;
 
 protected:
 
-    uint8   _id;
-    uint8   _size;    // Максимальный размер, отведенный для полинома в общей памяти
-    uint    _offset;  // Смещение в общей памяти
-    uint8** memory; // Указатель на указатель на общую память для полиномов на стеке
-
+    uint8_t   _id;
+    uint8_t   _size;    // Size of reserved memory for this polynomial
+    uint16_t  _offset;  // Offset in memory
+    uint8_t** _memory;  // Pointer to pointer to memory
 };
 
 

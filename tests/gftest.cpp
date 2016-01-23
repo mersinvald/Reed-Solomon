@@ -36,10 +36,10 @@ GFtest::test_add(std::string &name) {
     INIT_TESTCASE;
 
     const uint testcount = 256;
-    uint8* leftops  = (uint8*) RS::gf::log;
-    uint8* rightops = (uint8*) RS::gf::exp;
+    uint8_t* leftops  = (uint8_t*) RS::gf::log;
+    uint8_t* rightops = (uint8_t*) RS::gf::exp;
 
-    uint8 answers[testcount] = {
+    uint8_t answers[testcount] = {
         1, 2, 5, 17, 18, 18, 90, 70, 30, 229, 71, 6, 214, 239, 212, 109, 72, 252, 205, 84, 128, 248, 5, 72, 147, 194, 111, 244, 208, 56,
         44, 177, 152, 173, 43, 179, 196, 110, 155, 20, 95, 71, 59, 173, 30, 211, 29, 102, 91, 57, 199, 119, 126, 15, 169, 25, 148, 32,
         96, 170, 244, 139, 172, 7, 89, 1, 234, 160, 255, 242, 110, 65, 135, 82, 172, 188, 14, 173, 90, 120, 203, 55, 71, 117, 228, 64,
