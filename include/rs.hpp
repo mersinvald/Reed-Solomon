@@ -358,7 +358,7 @@ private:
         }
 
         /* Magnitude polynomial
-        /* Shit just got real */
+           Shit just got real */
         Poly &E = polynoms[ID_MSG_E];
         E.Reset();
         E.length = msg_in.length;
@@ -420,7 +420,7 @@ private:
         uint8_t delta = 0;
         uint8_t index;
 
-        for(int8_t i = 0; i < ecc_length - erase_count; i++){
+        for(uint8_t i = 0; i < ecc_length - erase_count; i++){
             if(erase_loc != NULL)
                 K = erase_count + i + synd_shift;
             else

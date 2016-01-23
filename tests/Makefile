@@ -1,5 +1,5 @@
 CXX=g++
-CXXFLAGS=-std=c++11 -Wall -pedantic
+CXXFLAGS=-std=c++11 -Wpedantic 
 LIBS = -L../build -lRS
 INC = -I ../include
 BIN=RStest
