@@ -55,7 +55,7 @@ struct Poly {
      * @param src    - source byte-sequence
      * @param size   - size of polynomial
      * @param offset - write offset */
-    inline void Set(uint8_t* src, uint8_t len, uint16_t offset = 0) {
+    inline void Set(const uint8_t* src, uint8_t len, uint16_t offset = 0) {
         #ifdef DEBUG
         assert(src && _size <= this->_size-offset);
         #endif

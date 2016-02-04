@@ -61,7 +61,7 @@ public:
     /* @brief Message encoding
      * @param *src - input message buffer      (msg_lenth size)
      * @param *dst - output buffer             (msg_length + ecc_length size at least) */
-    void Encode(void* src, void* dst) {
+    void Encode(const void* src, void* dst) {
         #ifdef DEBUG
         assert(msg_length + ecc_length < 256);
         #endif
@@ -74,7 +74,7 @@ public:
         uint8_t stack_memory[MSG_CNT * msg_length + POLY_CNT * ecc_length * 2];
         this->memory = stack_memory;
 
-        uint8_t* src_ptr = (uint8_t*) src;
+        const uint8_t* src_ptr = (const uint8_t*) src;
         uint8_t* dst_ptr = (uint8_t*) dst;
 
         Poly &msg_in  = polynoms[ID_MSG_IN];
@@ -123,12 +123,12 @@ public:
      * @param *erase_pos   - known errors positions
      * @param erase_count  - count of known errors
      * @return RESULT_SUCCESS if successfull, error code otherwise */
-     int Decode(void* src, void* dst, uint8_t* erase_pos = nullptr, size_t erase_count = 0) {
+     int Decode(const void* src, void* dst, uint8_t* erase_pos = nullptr, size_t erase_count = 0) {
         #ifdef DEBUG
         assert(msg_length + ecc_length < 256);
         #endif
 
-        uint8_t *src_ptr = (uint8_t*) src;
+        const uint8_t *src_ptr = (const uint8_t*) src;
         uint8_t *dst_ptr = (uint8_t*) dst;
 
         const uint8_t src_len = msg_length + ecc_length;
