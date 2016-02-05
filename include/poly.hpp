@@ -37,6 +37,15 @@ struct Poly {
         return true;
     }
 
+    inline bool Append(const uint8_t* array, size_t size) {
+        #ifdef DEBUG
+        assert(length+size < _size);
+        #endif
+        memcpy(ptr() + length, array, size);
+        length += size;
+        return true;
+    }
+
     /* @brief Polynomial initialization */
     inline void Init(uint8_t id, uint16_t offset, uint8_t size, uintptr_t memory_ptr) {
         this->_id     = id;

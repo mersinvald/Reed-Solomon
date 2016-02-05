@@ -58,10 +58,10 @@ public:
         memory = NULL;
     }
 
-    /* @brief Message encoding
+    /* @brief Message block encoding
      * @param *src - input message buffer      (msg_lenth size)
-     * @param *dst - output buffer             (msg_length + ecc_length size at least) */
-    void Encode(const void* src, void* dst) {
+     * @param *dst - output buffer for ecc     (ecc_length size at least) */
+     void EncodeBlock(const void* src, void* dst) {
         #ifdef DEBUG
         assert(msg_length + ecc_length < 256);
         #endif
@@ -110,25 +110,37 @@ public:
             }
         }
 
-        // Copying message to the output buffer
-        memcpy(dst_ptr, src_ptr, msg_length * sizeof(uint8_t));
-
         // Copying ECC to the output buffer
-        memcpy(dst_ptr+msg_length, msg_out.ptr()+msg_length, ecc_length * sizeof(uint8_t));
+        memcpy(dst_ptr, msg_out.ptr()+msg_length, ecc_length * sizeof(uint8_t));
     }
 
-    /* @brief Message decoding
-     * @param *msg_in      - encoded message buffer   (msg_length + ecc_length size)
+    /* @brief Message encoding
+     * @param *src - input message buffer      (msg_lenth size)
+     * @param *dst - output buffer             (msg_length + ecc_length size at least) */
+    void Encode(const void* src, void* dst) {
+        uint8_t* dst_ptr = (uint8_t*) dst;
+
+        // Copying message to the output buffer
+        memcpy(dst_ptr, src, msg_length * sizeof(uint8_t));
+
+        // Calling EncodeBlock to write ecc to out[ut buffer
+        EncodeBlock(src, dst_ptr+msg_length);
+    }
+
+    /* @brief Message block decoding
+     * @param *src         - encoded message buffer   (msg_length size)
+     * @param *ecc         - ecc buffer               (ecc_length size)
      * @param *msg_out     - output buffer            (msg_length size at least)
      * @param *erase_pos   - known errors positions
      * @param erase_count  - count of known errors
      * @return RESULT_SUCCESS if successfull, error code otherwise */
-     int Decode(const void* src, void* dst, uint8_t* erase_pos = nullptr, size_t erase_count = 0) {
+     int DecodeBlock(const void* src, const void* ecc, void* dst, uint8_t* erase_pos = nullptr, size_t erase_count = 0) {
         #ifdef DEBUG
         assert(msg_length + ecc_length < 256);
         #endif
 
         const uint8_t *src_ptr = (const uint8_t*) src;
+        const uint8_t *ecc_ptr = (const uint8_t*) ecc;
         uint8_t *dst_ptr = (uint8_t*) dst;
 
         const uint8_t src_len = msg_length + ecc_length;
@@ -143,7 +155,8 @@ public:
         Poly &epos    = polynoms[ID_ERASURES];
 
         // Copying message to polynomials memory
-        msg_in.Set(src_ptr, src_len);
+        msg_in.Set(src_ptr, msg_length);
+        msg_in.Append(ecc_ptr, ecc_length);
         msg_out = msg_in;
 
         // Copying known errors to polynomial
@@ -211,6 +224,20 @@ public:
         return RESULT_SUCCESS;
     }
 
+    /* @brief Message block decoding
+     * @param *src         - encoded message buffer   (msg_length + ecc_length size)
+     * @param *msg_out     - output buffer            (msg_length size at least)
+     * @param *erase_pos   - known errors positions
+     * @param erase_count  - count of known errors
+     * @return RESULT_SUCCESS if successfull, error code otherwise */
+     int Decode(const void* src, void* dst, uint8_t* erase_pos = nullptr, size_t erase_count = 0) {
+         const uint8_t *src_ptr = (const uint8_t*) src;
+         const uint8_t *ecc_ptr = src_ptr + msg_length;
+         uint8_t *dst_ptr = (uint8_t*) dst;
+
+         return DecodeBlock(src, ecc_ptr, dst);
+     }
+
 #ifndef DEBUG
 private:
 #endif
@@ -243,11 +270,6 @@ private:
     // Pointer for polynomials memory on stack
     uint8_t* memory;
     Poly polynoms[MSG_CNT + POLY_CNT];
-
-    #ifdef DEBUG
-    const uint8 msg_len = msg_length;
-    const uint8 ecc_len = ecc_length;
-    #endif
 
     void GeneratorPoly() {
         Poly &gen = polynoms[ID_GENERATOR];
