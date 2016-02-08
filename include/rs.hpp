@@ -156,7 +156,7 @@ public:
 
         // Copying message to polynomials memory
         msg_in.Set(src_ptr, msg_length);
-        msg_in.Append(ecc_ptr, ecc_length);
+        msg_in.Set(ecc_ptr, ecc_length, msg_length);
         msg_out = msg_in;
 
         // Copying known errors to polynomial
