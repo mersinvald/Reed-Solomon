@@ -57,7 +57,7 @@ struct Poly {
      * @param offset - write offset */
     inline void Set(const uint8_t* src, uint8_t len, uint16_t offset = 0) {
         #ifdef DEBUG
-        assert(src && _size <= this->_size-offset);
+        assert(src && len <= this->_size-offset);
         #endif
         memcpy(ptr()+offset, src, len * sizeof(uint8_t));
         length = len + offset;
@@ -79,6 +79,13 @@ struct Poly {
     }
 
     inline uint8_t& operator[] (uint8_t i) const {
+        #ifdef DEBUG
+        assert(i < _size);
+        #endif
+        return ptr()[i];
+    }
+
+    inline uint8_t& at(uint8_t i) const {
         #ifdef DEBUG
         assert(i < _size);
         #endif

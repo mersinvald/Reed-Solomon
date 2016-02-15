@@ -141,30 +141,30 @@ inline uint8_t inverse(uint8_t x){
  * @param &p    - source polynomial
  * @param &newp - destination polynomial
  * @param x     - scalar */
-void poly_scale(const Poly &p, Poly &newp, uint16_t x);
+void poly_scale(const Poly *p, Poly *newp, uint16_t x);
 
 /* @brief Addition of two polynomials
  * @param &p    - right operand polynomial
  * @param &q    - left operand polynomial
  * @param &newp - destination polynomial */
-void poly_add(const Poly &p, const Poly &q, Poly &newp);
+void poly_add(const Poly *p, const Poly *q, Poly *newp);
 
 /* @brief Multiplication of two polynomials
  * @param &p    - right operand polynomial
  * @param &q    - left operand polynomial
  * @param &newp - destination polynomial */
-void poly_mul(const Poly &p, const Poly &q, Poly &newp);
+void poly_mul(const Poly *p, const Poly *q, Poly *newp);
 
 /* @brief Division of two polynomials
  * @param &p    - right operand polynomial
  * @param &q    - left operand polynomial
  * @param &newp - destination polynomial */
-void poly_div(const Poly &p, const Poly &q, Poly &newp);
+void poly_div(const Poly *p, const Poly *q, Poly *newp);
 
 /* @brief Evaluation of polynomial in x
  * @param &p - polynomial to evaluate
  * @param x  - evaluation point */
-int8_t poly_eval(const Poly &p, uint16_t x);
+int8_t poly_eval(const Poly *p, uint16_t x);
 
 } /* end of gf namespace */
 
