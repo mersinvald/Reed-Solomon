@@ -3,7 +3,7 @@ TEMPLATE = lib
 DEFINES += RS_LIBRARY
 DEFINES += DEBUG
 
-QT       -= core gui
+QT     -= core gui
 CONFIG += staticlib
 CONFIG += c++11
 CONFIG -= qt

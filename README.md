@@ -8,7 +8,7 @@ If somebody want to reimplement memory management with heap usege, pull requests
 
 ## Build
 
-To build the library simply run <b>make</b> in the folder with cloned repo<br>
+To build the library simply run <b>make</b> in the folder with cloned repo<br>, library file and executables will emerge in ./build folder
 
 ## Usage
 

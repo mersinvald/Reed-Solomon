@@ -501,8 +501,6 @@ private:
         return true;
     }
 
-
-
     void CalcForneySyndromes(const Poly *synd, const Poly *erasures_pos, size_t msg_in_size) {
         Poly *erase_pos_reversed = &polynoms[ID_TPOLY1];
         Poly *forney_synd = &polynoms[ID_FORNEY];

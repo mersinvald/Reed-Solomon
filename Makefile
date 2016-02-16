@@ -1,16 +1,9 @@
-all: libRS RStest example
+all:
+	mkdir -p build && cd build && cmake ../ && make
 
-libRS:
-	mkdir build/obj -p && cd src && make
-
-RStest:
-	cd tests && make
-
-example:
-	cd examples && make
+x32:
+	mkdir -p build && cd build && cmake -DCMAKE_TOOLCHAIN_FILE=../x32.cmake_toolchain ../ && make
 
 clean:
-	cd src && make clean
-	cd examples && make clean
-	cd tests && make clean
+	cd build && make clean && cd .. && rm -rf build
 
