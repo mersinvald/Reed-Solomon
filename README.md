@@ -8,13 +8,16 @@ If somebody want to reimplement memory management with heap usege, pull requests
 
 ## Getting the source
 
-If you want only Reed-Solomon code, just clone repository.
-If you want to get tests and examples also, do <b>git clone --recursive git@github.com:mersinvald/Reed-Solomon.git</b>
+If you want only Reed-Solomon code, just clone repository.<br>
+If you want to get tests and examples also, do 
+```
+git clone --recursive git@github.com:mersinvald/Reed-Solomon.git
+```
 
 ## Build
 
-There is no need in building RS library, cause all the implementation is in headers.
-To build tests and examples simply run <b>make</b> in the folder with cloned repo<br>, executables will emerge in the 
+There is no need in building RS library, cause all the implementation is in headers.<br>
+To build tests and examples simply run <b>make</b> in the folder with cloned repo and executables will emerge in the 
 ./build folder
 
 ## Usage
