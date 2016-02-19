@@ -6,16 +6,22 @@ Reed Solomon BCH encoder and decoder library
 This RS implementation was designed for embedded purposes, so all the memory allocations performed on the stack.<br>
 If somebody want to reimplement memory management with heap usege, pull requests are welcome
 
+## Getting the source
+
+If you want only Reed-Solomon code, just clone repository.
+If you want to get tests and examples also, do <b>git clone --recursive git@github.com:mersinvald/Reed-Solomon.git</b>
+
 ## Build
 
-To build the library simply run <b>make</b> in the folder with cloned repo<br>, library file and executables will emerge in ./build folder
+There is no need in building RS library, cause all the implementation is in headers.
+To build tests and examples simply run <b>make</b> in the folder with cloned repo<br>, executables will emerge in the 
+./build folder
 
 ## Usage
 
-All the Reed-Solomon code is in folder **include**, you need to just include header files, GF ariphmetics is separated in both .hpp and .cpp, so it have to be included in your project too.
-Also, **make** will build the static library with GF ariphmetics functions.
+All the Reed-Solomon code is in folder **include**, you just need to include header <b>rs.hpp</b>
 
-Template class ReedSolomon accepts two template arguements: message length and ecc length. <br>
+Template class ReedSolomon accepts two template arguments: message length and ecc length. <br>
 Simple example: <br>
 ```
     char message[] = "Some very important message ought to be delivered";
