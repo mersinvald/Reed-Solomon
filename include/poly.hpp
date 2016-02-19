@@ -38,24 +38,24 @@ struct Poly {
     }
 
     /* @brief Polynomial initialization */
-    inline void Init(uint8_t id, uint16_t offset, uint8_t size, uintptr_t memory_ptr) {
+    inline void Init(uint8_t id, uint16_t offset, uint8_t size, uint8_t** memory_ptr) {
         this->_id     = id;
         this->_offset = offset;
         this->_size   = size;
         this->length  = 0;
-        this->_memory  = (uint8_t**) memory_ptr;
+        this->_memory = memory_ptr;
     }
 
     /* @brief Polynomial memory zeroing */
     inline void Reset() {
-        memset(ptr(), 0, this->_size);
+        memset((void*)ptr(), 0, this->_size);
     }
 
     /* @brief Copy polynomial to memory
      * @param src    - source byte-sequence
      * @param size   - size of polynomial
      * @param offset - write offset */
-    inline void Set(const uint8_t* src, uint8_t len, uint16_t offset = 0) {
+    inline void Set(const uint8_t* src, uint8_t len, uint8_t offset = 0) {
         #ifdef DEBUG
         assert(src && len <= this->_size-offset);
         #endif
@@ -65,24 +65,17 @@ struct Poly {
 
     #define max(a, b) ((a > b) ? (a) : (b))
 
+    inline void Copy(const Poly* src) {
+        length = max(length, src->length);
+        Set(src->ptr(), length);
+    }
+
     inline bool operator== (Poly &b) const {
-        return memcmp(this->ptr(), b.ptr(), max(this->length, b.length)) == 0;
+        return memcmp(ptr(), b.ptr(), max(this->length, b.length)) == 0;
     }
 
     inline bool operator!= (Poly &b) const {
-        return memcmp(this->ptr(), b.ptr(), max(this->length, b.length));
-    }
-
-    inline void operator=  (const Poly &b) {
-        length = max(length, b.length);
-        Set(b.ptr(), length);
-    }
-
-    inline uint8_t& operator[] (uint8_t i) const {
-        #ifdef DEBUG
-        assert(i < _size);
-        #endif
-        return ptr()[i];
+        return memcmp(ptr(), b.ptr(), max(this->length, b.length));
     }
 
     inline uint8_t& at(uint8_t i) const {

@@ -61,7 +61,7 @@ RStest::test_decode(std::string &name) {
         0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
         99, 26, 219, 193, 9, 94, 186, 143
     };
-    SUBTEST(rs.Decode(clean, message) == RESULT_SUCCESS);
+    SUBTEST(rs.Decode(clean, message) == 0);
     SUBTEST(compare(message, right, 30));
 
     // Test corrupted message
@@ -70,7 +70,7 @@ RStest::test_decode(std::string &name) {
         99, 26, 219, 193, 9, 94, 0, 143
     };
 
-    SUBTEST(rs.Decode(corrupted, message) == RESULT_SUCCESS);
+    SUBTEST(rs.Decode(corrupted, message) == 0);
     SUBTEST(compare(message, right, 30));
 
     RETURN

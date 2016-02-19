@@ -10,11 +10,6 @@
 #include "poly.hpp"
 #include "gf.hpp"
 
-enum Result {
-    RESULT_SUCCESS,
-    RESULT_ERROR
-};
-
 namespace RS {
 
 #define MSG_CNT 3   // message-length polynomials count
@@ -26,10 +21,10 @@ template <const uint8_t msg_length,  // Message length without correction code
 class ReedSolomon {
 public:
     ReedSolomon() {
-        const    uint8_t   enc_len  = msg_length + ecc_length;
-        const    uint8_t   poly_len = ecc_length * 2;
-        const    uintptr_t memptr   = (uintptr_t) &memory;
-        register uint16_t  offset   = 0;
+        const uint8_t   enc_len  = msg_length + ecc_length;
+        const uint8_t   poly_len = ecc_length * 2;
+        uint8_t** memptr   = &memory;
+        uint16_t  offset   = 0;
 
         /* Initialize first six polys manually cause their amount depends on template parameters */
 
@@ -47,7 +42,7 @@ public:
         polynoms[5].Init(ID_MSG_E, offset, enc_len, memptr);
         offset += enc_len;
 
-        for(uint8_t i = ID_TPOLY3; i < ID_ERR_EVAL+1; i++) {
+        for(uint8_t i = ID_TPOLY3; i < ID_ERR_EVAL+2; i++) {
             polynoms[i].Init(i, offset, poly_len, memptr);
             offset += poly_len;
         }
@@ -77,41 +72,41 @@ public:
         const uint8_t* src_ptr = (const uint8_t*) src;
         uint8_t* dst_ptr = (uint8_t*) dst;
 
-        Poly &msg_in  = polynoms[ID_MSG_IN];
-        Poly &msg_out = polynoms[ID_MSG_OUT];
-        Poly &gen     = polynoms[ID_GENERATOR];
+        Poly *msg_in  = &polynoms[ID_MSG_IN];
+        Poly *msg_out = &polynoms[ID_MSG_OUT];
+        Poly *gen     = &polynoms[ID_GENERATOR];
 
         // Weird shit, but without reseting msg_in it simply doesn't work
-        msg_in.Reset();
-        msg_out.Reset();
+        msg_in->Reset();
+        msg_out->Reset();
 
         // Using cached generator or generating new one
         if(generator_cached) {
-            gen.Set(generator_cache, sizeof(generator_cache));
+            gen->Set(generator_cache, sizeof(generator_cache));
         } else {
             GeneratorPoly();
-            memcpy(generator_cache, gen.ptr(), gen.length);
+            memcpy(generator_cache, gen->ptr(), gen->length);
             generator_cached = true;
         }
 
         // Copying input message to internal polynomial
-        msg_in.Set(src_ptr, msg_length);
-        msg_out = msg_in;
-        msg_out.length = msg_in.length + ecc_length;
+        msg_in->Set(src_ptr, msg_length);
+        msg_out->Set(src_ptr, msg_length);
+        msg_out->length = msg_in->length + ecc_length;
 
         // Here all the magic happens
-        uint8_t coef; // cache
-        for(uint i = 0; i < msg_length; i++){
-            coef = msg_out[i];
+        uint8_t coef = 0; // cache
+        for(uint8_t i = 0; i < msg_length; i++){
+            coef = msg_out->at(i);
             if(coef != 0){
-                for(uint j = 1; j < gen.length; j++){
-                    msg_out[i+j] ^= gf::mul(gen[j], coef);
+                for(uint j = 1; j < gen->length; j++){
+                    msg_out->at(i+j) ^= gf::mul(gen->at(j), coef);
                 }
             }
         }
 
         // Copying ECC to the output buffer
-        memcpy(dst_ptr, msg_out.ptr()+msg_length, ecc_length * sizeof(uint8_t));
+        memcpy(dst_ptr, msg_out->ptr()+msg_length, ecc_length * sizeof(uint8_t));
     }
 
     /* @brief Message encoding
@@ -157,7 +152,7 @@ public:
         // Copying message to polynomials memory
         msg_in->Set(src_ptr, msg_length);
         msg_in->Set(ecc_ptr, ecc_length, msg_length);
-        *msg_out = *msg_in;
+        msg_out->Copy(msg_in);
 
         // Copying known errors to polynomial
         if(erase_pos == NULL) {
@@ -170,7 +165,7 @@ public:
         }
 
         // Too many errors
-        if(epos->length > ecc_length) return RESULT_ERROR;
+        if(epos->length > ecc_length) return 1;
 
         Poly *synd   = &polynoms[ID_SYNDROMES];
         Poly *eloc   = &polynoms[ID_ERRORS_LOC];
@@ -207,7 +202,7 @@ public:
         FindErrors(reloc, src_len);
 
         // Error happened while finding errors (so helpfull :D)
-        if(err->length == 0) return RESULT_ERROR;
+        if(err->length == 0) return 1;
 
         /* Adding found errors with known */
         for(uint8_t i = 0; i < err->length; i++) {
@@ -221,7 +216,7 @@ public:
         // Wrighting corrected message to output buffer
         msg_out->length = dst_len;
         memcpy(dst_ptr, msg_out->ptr(), msg_out->length * sizeof(uint8_t));
-        return RESULT_SUCCESS;
+        return 0;
     }
 
     /* @brief Message block decoding
@@ -271,12 +266,12 @@ private:
     Poly polynoms[MSG_CNT + POLY_CNT];
 
     void GeneratorPoly() {
-        Poly *gen = &polynoms[ID_GENERATOR];
+        Poly *gen = polynoms + ID_GENERATOR;
         gen->at(0) = 1;
         gen->length = 1;
 
-        Poly *mulp = &polynoms[ID_TPOLY1];
-        Poly *temp = &polynoms[ID_TPOLY2];
+        Poly *mulp = polynoms + ID_TPOLY1;
+        Poly *temp = polynoms + ID_TPOLY2;
         mulp->length = 2;
 
         for(int8_t i = 0; i < ecc_length; i++){
@@ -285,7 +280,7 @@ private:
 
             gf::poly_mul(gen, mulp, temp);
 
-            *gen = *temp;
+            gen->Copy(temp);
         }
     }
 
@@ -319,7 +314,7 @@ private:
             gf::poly_add(mulp, addp, apol);
             gf::poly_mul(errata_loc, apol, temp);
 
-            *errata_loc = *temp;
+            errata_loc->Copy(temp);
         }
     }
 
@@ -423,8 +418,8 @@ private:
         Poly *temp2     = &polynoms[ID_TPOLY4];
 
         if(erase_loc != NULL) {
-            *err_loc = *erase_loc;
-            *old_loc = *erase_loc;
+            err_loc->Copy(erase_loc);
+            old_loc->Copy(erase_loc);
         } else {
             err_loc->length = 1;
             old_loc->length = 1;
@@ -459,11 +454,11 @@ private:
                 if(old_loc->length > err_loc->length) {
                     gf::poly_scale(old_loc, temp, delta);
                     gf::poly_scale(err_loc, old_loc, gf::inverse(delta));
-                    *err_loc = *temp;
+                    err_loc->Copy(temp);
                 }
                 gf::poly_scale(old_loc, temp, delta);
                 gf::poly_add(err_loc, temp, temp2);
-                *err_loc = *temp2;
+                err_loc->Copy(temp2);
             }
         }
 
