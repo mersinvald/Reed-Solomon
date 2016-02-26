@@ -64,12 +64,16 @@ bool
 GFtest::test_mul(std::string &name) {
     INIT_TESTCASE;
 
+    SUBTEST(true);
+
     RETURN;
 }
 
 bool
 GFtest::test_div(std::string &name) {
     INIT_TESTCASE;
+
+	SUBTEST(true);
 
     RETURN;
 }
@@ -78,12 +82,16 @@ bool
 GFtest::test_pow(std::string &name) {
     INIT_TESTCASE;
 
+    SUBTEST(true);
+
     RETURN;
 }
 
 bool
 GFtest::test_inverse(std::string &name) {
     INIT_TESTCASE;
+
+    SUBTEST(true);
 
     RETURN;
 }
@@ -92,12 +100,16 @@ bool
 GFtest::test_poly_scale(std::string &name) {    
     INIT_TESTCASE;
 
+    SUBTEST(true);
+
     RETURN;
 }
 
 bool
 GFtest::test_poly_add(std::string &name) {
     INIT_TESTCASE;
+
+    SUBTEST(true);
 
     RETURN;
 }
@@ -106,6 +118,8 @@ bool
 GFtest::test_poly_mul(std::string &name) {
     INIT_TESTCASE;
 
+    SUBTEST(true);
+
     RETURN;
 }
 
@@ -113,12 +127,16 @@ bool
 GFtest::test_poly_div(std::string &name) {
     INIT_TESTCASE;
 
+    SUBTEST(true);
+
     RETURN;
 }
 
 bool
 GFtest::test_poly_eval(std::string &name) {
     INIT_TESTCASE;
+
+    SUBTEST(true);
 
     RETURN;
 }
