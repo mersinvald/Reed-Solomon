@@ -8,12 +8,14 @@
 #include <stdint.h>
 #include <string.h>
 
-#ifdef DEBUG
+#if !defined DEBUG && !defined __CC_ARM
 #include <assert.h>
+#else
+#define assert(...)
 #endif
 
 namespace RS {
-    
+
 struct Poly {
     Poly()
         : length(0), _memory(NULL) {}
@@ -25,9 +27,7 @@ struct Poly {
      * @param num - number to append
      * @return false if polynomial can't be stretched */
     inline bool Append(uint8_t num) {
-        #ifdef DEBUG
         assert(length+1 < _size);
-        #endif
         ptr()[length++] = num;
         return true;
     }
@@ -51,32 +51,20 @@ struct Poly {
      * @param size   - size of polynomial
      * @param offset - write offset */
     inline void Set(const uint8_t* src, uint8_t len, uint8_t offset = 0) {
-        #ifdef DEBUG
         assert(src && len <= this->_size-offset);
-        #endif
         memcpy(ptr()+offset, src, len * sizeof(uint8_t));
         length = len + offset;
     }
 
-    #define max(a, b) ((a > b) ? (a) : (b))
+    #define poly_max(a, b) ((a > b) ? (a) : (b))
 
     inline void Copy(const Poly* src) {
-        length = max(length, src->length);
+        length = poly_max(length, src->length);
         Set(src->ptr(), length);
     }
 
-    inline bool operator== (Poly &b) const {
-        return memcmp(ptr(), b.ptr(), max(this->length, b.length)) == 0;
-    }
-
-    inline bool operator!= (Poly &b) const {
-        return memcmp(ptr(), b.ptr(), max(this->length, b.length));
-    }
-
     inline uint8_t& at(uint8_t i) const {
-        #ifdef DEBUG
         assert(i < _size);
-        #endif
         return ptr()[i];
     }
 
@@ -90,9 +78,7 @@ struct Poly {
 
     // Returns pointer to memory of this polynomial
     inline uint8_t* ptr() const {
-        #ifdef DEBUG
         assert(_memory && *_memory);
-        #endif
         return (*_memory) + _offset;
     }
 

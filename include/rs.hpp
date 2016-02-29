@@ -10,6 +10,12 @@
 #include "poly.hpp"
 #include "gf.hpp"
 
+#if !defined DEBUG && !defined __CC_ARM
+#include <assert.h>
+#else
+#define assert(...)
+#endif
+
 namespace RS {
 
 #define MSG_CNT 3   // message-length polynomials count
@@ -57,9 +63,7 @@ public:
      * @param *src - input message buffer      (msg_lenth size)
      * @param *dst - output buffer for ecc     (ecc_length size at least) */
      void EncodeBlock(const void* src, void* dst) {
-        #ifdef DEBUG
         assert(msg_length + ecc_length < 256);
-        #endif
 
         /* Generator cache, it dosn't change for one template parameters */
         static uint8_t generator_cache[ecc_length+1] = {0};
@@ -130,9 +134,7 @@ public:
      * @param erase_count  - count of known errors
      * @return RESULT_SUCCESS if successfull, error code otherwise */
      int DecodeBlock(const void* src, const void* ecc, void* dst, uint8_t* erase_pos = NULL, size_t erase_count = 0) {
-        #ifdef DEBUG
         assert(msg_length + ecc_length < 256);
-        #endif
 
         const uint8_t *src_ptr = (const uint8_t*) src;
         const uint8_t *ecc_ptr = (const uint8_t*) ecc;

@@ -9,6 +9,13 @@
 #include <string.h>
 #include "poly.hpp"
 
+#if !defined DEBUG && !defined __CC_ARM
+#include <assert.h>
+#else
+#define assert(...)
+#endif
+
+
 namespace RS {
 
 namespace gf {
@@ -108,9 +115,7 @@ inline uint8_t mul(uint16_t x, uint16_t y){
  * @param y - divisor
  * @return x / y */
 inline uint8_t div(uint8_t x, uint8_t y){
-    #ifdef DEBUG
     assert(y != 0);
-    #endif
     if(x == 0) return 0;
     return exp[(log[x] + 255 - log[y]) % 255];
 }
@@ -156,7 +161,7 @@ poly_scale(const Poly *p, Poly *newp, uint16_t x) {
  * @param &newp - destination polynomial */
 inline void
 poly_add(const Poly *p, const Poly *q, Poly *newp) {
-    newp->length = max(p->length, q->length);
+    newp->length = poly_max(p->length, q->length);
     memset(newp->ptr(), 0, newp->length * sizeof(uint8_t));
 
     for(uint8_t i = 0; i < p->length; i++){

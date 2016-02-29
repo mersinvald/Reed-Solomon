@@ -82,6 +82,8 @@ bool
 RStest::test_stress(std::string &name) {
     INIT_TESTCASE;
 
+    SUBTEST(true);
+
     RETURN;
 }
 
