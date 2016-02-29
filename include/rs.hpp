@@ -99,7 +99,7 @@ public:
         for(uint8_t i = 0; i < msg_length; i++){
             coef = msg_out->at(i);
             if(coef != 0){
-                for(uint j = 1; j < gen->length; j++){
+                for(uint32_t j = 1; j < gen->length; j++){
                     msg_out->at(i+j) ^= gf::mul(gen->at(j), coef);
                 }
             }
@@ -129,7 +129,7 @@ public:
      * @param *erase_pos   - known errors positions
      * @param erase_count  - count of known errors
      * @return RESULT_SUCCESS if successfull, error code otherwise */
-     int DecodeBlock(const void* src, const void* ecc, void* dst, uint8_t* erase_pos = nullptr, size_t erase_count = 0) {
+     int DecodeBlock(const void* src, const void* ecc, void* dst, uint8_t* erase_pos = NULL, size_t erase_count = 0) {
         #ifdef DEBUG
         assert(msg_length + ecc_length < 256);
         #endif
@@ -225,7 +225,7 @@ public:
      * @param *erase_pos   - known errors positions
      * @param erase_count  - count of known errors
      * @return RESULT_SUCCESS if successfull, error code otherwise */
-     int Decode(const void* src, void* dst, uint8_t* erase_pos = nullptr, size_t erase_count = 0) {
+     int Decode(const void* src, void* dst, uint8_t* erase_pos = NULL, size_t erase_count = 0) {
          const uint8_t *src_ptr = (const uint8_t*) src;
          const uint8_t *ecc_ptr = src_ptr + msg_length;
 
@@ -258,7 +258,7 @@ private:
         ID_ERRORS,
 
         ID_COEF_POS,
-        ID_ERR_EVAL,
+        ID_ERR_EVAL
     };
 
     // Pointer for polynomials memory on stack

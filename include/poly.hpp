@@ -13,18 +13,13 @@
 #endif
 
 namespace RS {
-
- 
-#ifdef __CC_ARM
-#define nullptr NULL
-#endif
     
 struct Poly {
     Poly()
-        : length(0), _memory(nullptr) {}
+        : length(0), _memory(NULL) {}
 
     Poly(uint8_t id, uint16_t offset, uint8_t size) \
-        : length(0), _id(id), _size(size), _offset(offset), _memory(nullptr) {}
+        : length(0), _id(id), _size(size), _offset(offset), _memory(NULL) {}
 
     /* @brief Append number at the end of polynomial
      * @param num - number to append
