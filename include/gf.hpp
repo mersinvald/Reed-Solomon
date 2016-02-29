@@ -5,7 +5,8 @@
 
 #ifndef GF_H
 #define GF_H
-#include <stdlib.h>
+#include <stdint.h>
+#include <string.h>
 #include "poly.hpp"
 
 namespace RS {

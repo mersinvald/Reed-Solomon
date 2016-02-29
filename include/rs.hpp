@@ -5,8 +5,8 @@
 
 #ifndef RS_HPP
 #define RS_HPP
-#include <stdlib.h>
-#include <iostream>
+#include <string.h>
+#include <stdint.h>
 #include "poly.hpp"
 #include "gf.hpp"
 
@@ -462,10 +462,10 @@ private:
             }
         }
 
-        uint shift = 0;
+        uint32_t shift = 0;
         while(err_loc->length && err_loc->at(shift) == 0) shift++;
 
-        uint errs = err_loc->length - shift - 1;
+        uint32_t errs = err_loc->length - shift - 1;
         if(((errs - erase_count) * 2 + erase_count) > ecc_length){
             return false; /* Error count is greater then we can fix! */
         }
