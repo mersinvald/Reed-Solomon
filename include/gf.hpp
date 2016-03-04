@@ -12,7 +12,7 @@
 #if !defined DEBUG && !defined __CC_ARM
 #include <assert.h>
 #else
-#define assert(...)
+#define assert(dummy)
 #endif
 
 
