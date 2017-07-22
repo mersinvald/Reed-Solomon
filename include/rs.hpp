@@ -143,6 +143,8 @@ public:
         const uint8_t src_len = msg_length + ecc_length;
         const uint8_t dst_len = msg_length;
 
+        bool ok;
+
         /* Allocation memory on stack */
         uint8_t stack_memory[MSG_CNT * msg_length + POLY_CNT * ecc_length * 2];
         this->memory = stack_memory;
@@ -201,7 +203,8 @@ public:
         }
 
         // Fing errors
-        FindErrors(reloc, src_len);
+        ok = FindErrors(reloc, src_len);
+        if(!ok) return 1;
 
         // Error happened while finding errors (so helpfull :D)
         if(err->length == 0) return 1;
