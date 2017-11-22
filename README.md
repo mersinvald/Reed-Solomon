@@ -55,5 +55,7 @@ Simple example: <br>
 
 ## Regards
 
-Huge thanks to authors of wikiversity <br>
-https://en.wikiversity.org/wiki/Reed–Solomon_codes_for_coders
+Huge thanks to authors of [wikiversity page about Reed-Solomon BCH](https://en.wikiversity.org/wiki/Reed–Solomon_codes_for_coders)
+## Related projects
+
+[Arduino Reed-Solomon Forward Error Correction library](https://github.com/simonyipeter/Arduino-FEC)
