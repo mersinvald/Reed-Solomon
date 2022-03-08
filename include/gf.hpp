@@ -80,10 +80,10 @@ const uint8_t log[256] = {
 
 
 /* ################################
- * # OPERATIONS OVER GALUA FIELDS #
+ * # OPERATIONS OVER GALOIS FIELDS #
  * ################################ */
 
-/* @brief Addition in Galua Fields
+/* @brief Addition in Galois Fields
  * @param x - left operand
  * @param y - right operand
  * @return x + y */
@@ -91,8 +91,8 @@ inline uint8_t add(uint8_t x, uint8_t y) {
     return x^y;
 }
 
-/* ##### GF substraction ###### */
-/* @brief Substraction in Galua Fields
+/* ##### GF subtraction ###### */
+/* @brief Subtraction in Galois Fields
  * @param x - left operand
  * @param y - right operand
  * @return x - y */
@@ -100,9 +100,9 @@ inline uint8_t sub(uint8_t x, uint8_t y) {
     return x^y;
 }
 
-/* @brief Multiplication in Galua Fields
+/* @brief Multiplication in Galois Fields
  * @param x - left operand
- * @param y - rifht operand
+ * @param y - right operand
  * @return x * y */
 inline uint8_t mul(uint16_t x, uint16_t y){
     if (x == 0 || y == 0)
@@ -110,7 +110,7 @@ inline uint8_t mul(uint16_t x, uint16_t y){
     return exp[log[x] + log[y]];
 }
 
-/* @brief Division in Galua Fields
+/* @brief Division in Galois Fields
  * @param x - dividend
  * @param y - divisor
  * @return x / y */
@@ -132,7 +132,7 @@ inline uint8_t pow(uint8_t x, intmax_t power){
     return exp[i];
 }
 
-/* @brief Inversion in Galua Fields
+/* @brief Inversion in Galois Fields
  * @param x - number
  * @return inversion of x */
 inline uint8_t inverse(uint8_t x){
