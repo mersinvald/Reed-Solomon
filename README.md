@@ -4,7 +4,7 @@ Reed Solomon BCH encoder and decoder library
 ## Overview
 
 This RS implementation was designed for embedded purposes, so all the memory allocations performed on the stack.<br>
-If somebody want to reimplement memory management with heap usege, pull requests are welcome
+If somebody wants to reimplement memory management with heap usage, pull requests are welcome
 
 ## Getting the source
 

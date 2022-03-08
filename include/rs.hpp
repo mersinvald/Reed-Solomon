@@ -19,7 +19,7 @@
 namespace RS {
 
 #define MSG_CNT 3   // message-length polynomials count
-#define POLY_CNT 14 // (ecc_length*2)-length polynomialc count
+#define POLY_CNT 14 // (ecc_length*2)-length polynomials count
 
 template <const uint8_t msg_length,  // Message length without correction code
           const uint8_t ecc_length>  // Length of correction code
@@ -55,12 +55,12 @@ public:
     }
 
     ~ReedSolomon() {
-        // Dummy destructor, gcc-generated one crashes programm
+        // Dummy destructor, gcc-generated one crashes program
         memory = NULL;
     }
 
     /* @brief Message block encoding
-     * @param *src - input message buffer      (msg_lenth size)
+     * @param *src - input message buffer      (msg_length size)
      * @param *dst - output buffer for ecc     (ecc_length size at least) */
      void EncodeBlock(const void* src, void* dst) {
         assert(msg_length + ecc_length < 256);
@@ -80,7 +80,7 @@ public:
         Poly *msg_out = &polynoms[ID_MSG_OUT];
         Poly *gen     = &polynoms[ID_GENERATOR];
 
-        // Weird shit, but without reseting msg_in it simply doesn't work
+        // Weird shit, but without resetting msg_in it simply doesn't work
         msg_in->Reset();
         msg_out->Reset();
 
@@ -114,7 +114,7 @@ public:
     }
 
     /* @brief Message encoding
-     * @param *src - input message buffer      (msg_lenth size)
+     * @param *src - input message buffer      (msg_length size)
      * @param *dst - output buffer             (msg_length + ecc_length size at least) */
     void Encode(const void* src, void* dst) {
         uint8_t* dst_ptr = (uint8_t*) dst;
@@ -132,7 +132,7 @@ public:
      * @param *msg_out     - output buffer            (msg_length size at least)
      * @param *erase_pos   - known errors positions
      * @param erase_count  - count of known errors
-     * @return RESULT_SUCCESS if successfull, error code otherwise */
+     * @return RESULT_SUCCESS if successful, error code otherwise */
      int DecodeBlock(const void* src, const void* ecc, void* dst, uint8_t* erase_pos = NULL, size_t erase_count = 0) {
         assert(msg_length + ecc_length < 256);
 
@@ -202,11 +202,11 @@ public:
             reloc->at(j) = eloc->at(i);
         }
 
-        // Fing errors
+        // Find errors
         ok = FindErrors(reloc, src_len);
         if(!ok) return 1;
 
-        // Error happened while finding errors (so helpfull :D)
+        // Error happened while finding errors (so helpful :D)
         if(err->length == 0) return 1;
 
         /* Adding found errors with known */
@@ -218,7 +218,7 @@ public:
         CorrectErrata(synd, epos, msg_in);
 
     return_corrected_msg:
-        // Wrighting corrected message to output buffer
+        // Writing corrected message to output buffer
         msg_out->length = dst_len;
         memcpy(dst_ptr, msg_out->ptr(), msg_out->length * sizeof(uint8_t));
         return 0;
@@ -229,7 +229,7 @@ public:
      * @param *msg_out     - output buffer            (msg_length size at least)
      * @param *erase_pos   - known errors positions
      * @param erase_count  - count of known errors
-     * @return RESULT_SUCCESS if successfull, error code otherwise */
+     * @return RESULT_SUCCESS if successful, error code otherwise */
      int Decode(const void* src, void* dst, uint8_t* erase_pos = NULL, size_t erase_count = 0) {
          const uint8_t *src_ptr = (const uint8_t*) src;
          const uint8_t *ecc_ptr = src_ptr + msg_length;
@@ -472,7 +472,7 @@ private:
 
         uint32_t errs = err_loc->length - shift - 1;
         if(((errs - erase_count) * 2 + erase_count) > ecc_length){
-            return false; /* Error count is greater then we can fix! */
+            return false; /* Error count is greater than we can fix! */
         }
 
         memcpy(error_loc->ptr(), err_loc->ptr() + shift, (err_loc->length - shift) * sizeof(uint8_t));
