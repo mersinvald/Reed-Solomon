@@ -10,7 +10,7 @@
 #include "poly.hpp"
 #include "gf.hpp"
 
-#if !defined DEBUG && !defined __CC_ARM
+#if !defined RS_DEBUG && !defined __CC_ARM
 #include <assert.h>
 #else
 #define assert(dummy)
@@ -237,7 +237,7 @@ public:
          return DecodeBlock(src, ecc_ptr, dst, erase_pos, erase_count);
      }
 
-#ifndef DEBUG
+#ifndef RS_DEBUG
 private:
 #endif
 

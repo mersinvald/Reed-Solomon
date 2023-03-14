@@ -8,7 +8,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#if !defined DEBUG && !defined __CC_ARM
+#if !defined RS_DEBUG && !defined __CC_ARM
 #include <assert.h>
 #else
 #define assert(dummy)
