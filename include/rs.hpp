@@ -10,7 +10,7 @@
 #include "poly.hpp"
 #include "gf.hpp"
 
-#if !defined RS_DEBUG && !defined __CC_ARM
+#if !defined RS_DEBUG && !defined __CC_ARM && !defined RS_NO_ASSERT
 #include <assert.h>
 #else
 #define assert(dummy)
