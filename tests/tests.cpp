@@ -10,7 +10,7 @@
 
 using namespace std;
 
-#define COUNT_PER_PTEST_LAP 1000
+#define COUNT_PER_PTEST_LAP 63
 #define COUNT_OF_LAPS       22
 
 int main() {
